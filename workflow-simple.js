@@ -19,10 +19,9 @@ setTimeout(() => {
 
 // Função para iniciar pesquisas
 function startResearch() {
-    alert('✅ BOTÃO FUNCIONANDO! Função startResearch() foi executada!');
-    console.log('🔍 startResearch() chamado!');
-    console.log('window.allNewProperties:', window.allNewProperties);
-    console.log('Quantidade de propriedades:', window.allNewProperties ? window.allNewProperties.length : 0);
+    // Debug logs (removido alert para produção)
+    console.log('🔍 startResearch() chamado');
+    console.log('Propriedades disponíveis:', window.allNewProperties ? window.allNewProperties.length : 0);
     
     // Verificar se existem propriedades carregadas
     if (!window.allNewProperties || window.allNewProperties.length === 0) {

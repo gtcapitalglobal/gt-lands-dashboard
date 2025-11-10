@@ -1854,13 +1854,9 @@ window.analyzeComps = async function(parcelNumber) {
         return;
     }
 
-    const rapidApiKey = localStorage.getItem('rapidapi_key') || '3eff6f411msh25829339707ed3fp167b43jsn832e9dd3f20d';
-    const openaiApiKey = localStorage.getItem('openai_api_key') || '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';
-    
-    if (!rapidApiKey || !openaiApiKey) {
-        alert('⚠️ API Keys não configuradas!\n\nVá em Configurações (⚙️) e adicione:\n- RapidAPI Key (Zillow)\n- OpenAI API Key\n\nObtenha em:\n- RapidAPI: https://rapidapi.com/apimaker/api/zillow-com1\n- OpenAI: https://platform.openai.com/api-keys');
-        return;
-    }
+    // API Keys hardcoded - sempre disponíveis
+    const rapidApiKey = '3eff6f411msh25829339707ed3fp167b43jsn832e9dd3f20d';
+    const openaiApiKey = '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';
 
     showLoading('Analisando comps e calculando BID...');
 
@@ -2186,11 +2182,8 @@ window.showRecommendations = async function(parcelNumber) {
         return;
     }
 
-    const openaiApiKey = localStorage.getItem('openai_api_key') || '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';
-    if (!openaiApiKey) {
-        alert('⚠️ OpenAI API Key não configurada!\n\nVá em Configurações (⚙️) e adicione sua chave.\n\nObtenha em: https://platform.openai.com/api-keys');
-        return;
-    }
+    // API Key hardcoded - sempre disponível
+    const openaiApiKey = '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';
 
     showLoading('Buscando propriedades similares com IA...');
 

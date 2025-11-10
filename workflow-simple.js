@@ -130,7 +130,8 @@ function renderResearchCard(prop, idx, total) {
     
     const lat = parseFloat(prop.Latitude);
     const lon = parseFloat(prop.Longitude);
-    const gmapsKey = localStorage.getItem('gmaps_api_key') || 'AIzaSyBr4UtMOvkhX6LxYOw89zjBkOYNO-_ykag';
+    // Google Maps API Key hardcoded - sempre disponível
+    const gmapsKey = 'AIzaSyBr4UtMOvkhX6LxYOw89zjBkOYNO-_ykag';
     
     return `
         <div class="bg-white rounded-lg shadow-xl p-4 md:p-6">

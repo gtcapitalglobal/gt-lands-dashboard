@@ -128,8 +128,18 @@ function renderResearchCard(prop, idx, total) {
     const savedProp = savedData.find(p => p['Parcel Number'] === prop['Parcel Number']);
     const passedElimination = savedProp?._passedElimination || false;
     
+    // Montar endereço completo a partir das colunas do CSV
+    const address = prop.Address || '';
+    const city = prop.City || '';
+    const state = prop.State || '';
+    const zip = prop.Zip || '';
+    const fullAddress = `${address}, ${city}, ${state} ${zip}`.trim();
+    
+    // Usar endereço completo ou coordenadas como fallback
     const lat = parseFloat(prop.Latitude);
     const lon = parseFloat(prop.Longitude);
+    const location = fullAddress && address ? encodeURIComponent(fullAddress) : `${lat},${lon}`;
+    
     // Google Maps API Key hardcoded - sempre disponível
     const gmapsKey = 'AIzaSyBr4UtMOvkhX6LxYOw89zjBkOYNO-_ykag';
     
@@ -165,14 +175,14 @@ function renderResearchCard(prop, idx, total) {
                     ${gmapsKey ? `
                         <!-- Imagem Street View -->
                         <img id="img-street-${idx}" 
-                             src="https://maps.googleapis.com/maps/api/streetview?size=800x400&location=${lat},${lon}&key=${gmapsKey}" 
+                             src="https://maps.googleapis.com/maps/api/streetview?size=800x400&location=${location}&key=${gmapsKey}" 
                              alt="Street View"
                              class="w-full h-full object-cover absolute inset-0 transition-opacity duration-300"
                              onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22400%22%3E%3Crect fill=%22%23ddd%22 width=%22800%22 height=%22400%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2224%22%3EImagem não disponível%3C/text%3E%3C/svg%3E'">
                         
                         <!-- Imagem Satellite -->
                         <img id="img-sat-${idx}" 
-                             src="https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lon}&zoom=18&size=800x400&maptype=satellite&key=${gmapsKey}" 
+                             src="https://maps.googleapis.com/maps/api/staticmap?center=${location}&zoom=18&size=800x400&maptype=satellite&key=${gmapsKey}" 
                              alt="Satellite View"
                              class="w-full h-full object-cover absolute inset-0 transition-opacity duration-300 opacity-0"
                              onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22400%22%3E%3Crect fill=%22%23ddd%22 width=%22800%22 height=%22400%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2224%22%3EImagem não disponível%3C/text%3E%3C/svg%3E'">

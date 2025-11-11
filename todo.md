@@ -946,5 +946,14 @@
 - [x] Melhorar testes de API com mais validações
 - [x] Adicionar feedback visual melhorado nos testes
 - [x] Adicionar tratamento de erros mais robusto
-- [ ] Testar todas as funcionalidades
+- [x] Testar todas as funcionalidades
+
+
+
+
+## Dashboard v21.7.1 - Correção do Testador Gemini API
+
+- [x] Atualizar modelo do Gemini de "gemini-pro" para "gemini-1.5-flash"
+- [x] Testar função testGemini() com API key válida
+- [ ] Fazer commit e push
 

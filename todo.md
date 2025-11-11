@@ -825,5 +825,25 @@
 - [x] Testar todas as funcionalidades
 - [x] Salvar checkpoint v21.2
 - [x] Atualizar versão no título do dashboard
-- [ ] Fazer commit e push para GitHub
+- [x] Fazer commit e push para GitHub
+
+
+
+
+## Dashboard v21.3 - CORREÇÃO: Restaurar IPP
+
+### BUG CRÍTICO: IPP Removido Acidentalmente
+- [x] Verificar versão anterior (v20 ou v19) com IPP funcionando
+- [x] Restaurar cálculo do IPP (Índice de Potencial de Propriedade)
+- [x] Restaurar exibição do IPP na lista de propriedades
+- [x] Restaurar nome "IPP" na interface
+- [x] Testar cálculo do IPP com propriedades reais
+- [x] Verificar se todos os fatores estão sendo considerados
+
+### Checkpoint v21.3
+- [x] Testar IPP funcionando corretamente
+- [x] Salvar checkpoint v21.3
+- [x] Atualizar versão no título do dashboard
+- [x] Fazer commit e push para GitHub
+- [x] Corrigir index.html para redirecionar para v21
 

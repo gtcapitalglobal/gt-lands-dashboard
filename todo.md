@@ -808,3 +808,22 @@
 - [x] Testar todas as funcionalidades integradas
 - [x] Salvar checkpoint v21.1 com testador e integração
 
+
+
+
+## Dashboard v21.2 - Testadores para Outras APIs
+
+### Testadores de API na Página de Configurações
+- [x] Adicionar botão "🧪 Testar API" para OpenAI
+- [x] Adicionar botão "🧪 Testar API" para Gemini
+- [x] Adicionar botão "🧪 Testar API" para Perplexity
+- [x] Mostrar resultados visuais (sucesso/erro) para cada teste
+- [x] Adicionar mensagens de erro detalhadas
+- [x] Testar chamadas reais às APIs
+
+### Checkpoint v21.2
+- [x] Testar todas as funcionalidades
+- [x] Salvar checkpoint v21.2
+- [x] Atualizar versão no título do dashboard
+- [ ] Fazer commit e push para GitHub
+

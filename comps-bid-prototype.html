@@ -64,8 +64,22 @@
 <body class="bg-gray-100 min-h-screen p-8">
     <div class="max-w-7xl mx-auto">
         <div class="bg-white rounded-lg shadow-xl p-8 mb-6">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">🔍 Análise de Comps + Cálculo de BID</h1>
-            <p class="text-gray-600">Análise de mercado e recomendação de lance</p>
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">🔍 Análise de Comps + Cálculo de BID</h1>
+                    <p class="text-gray-600">Análise de mercado e recomendação de lance</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="window.location.href='screen2-prototype.html'" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                        <span>📊</span>
+                        <span>Análise</span>
+                    </button>
+                    <button onclick="window.location.href='dashboard-v21.html'" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2">
+                        <span>←</span>
+                        <span>Dashboard</span>
+                    </button>
+                </div>
+            </div>
         </div>
         
         <!-- Informações da Propriedade -->
@@ -418,6 +432,33 @@
     </div>
 
     <script>
+        // Carregar dados do localStorage
+        let currentProperty = null;
+        try {
+            const storedProperty = localStorage.getItem('currentProperty');
+            if (storedProperty) {
+                currentProperty = JSON.parse(storedProperty);
+                // Preencher informações da propriedade
+                document.addEventListener('DOMContentLoaded', () => {
+                    const addressEl = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-3 > div:nth-child(1) p');
+                    const parcelEl = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-3 > div:nth-child(2) p');
+                    const countyEl = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-3 > div:nth-child(3) p');
+                    const acresEl = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-3 > div:nth-child(4) p');
+                    const amountEl = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-3 > div:nth-child(5) p');
+                    const typeEl = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-3 > div:nth-child(6) p');
+                    
+                    if (addressEl) addressEl.textContent = currentProperty.Address || 'N/A';
+                    if (parcelEl) parcelEl.textContent = currentProperty['Parcel Number'] || 'N/A';
+                    if (countyEl) countyEl.textContent = currentProperty.County || 'N/A';
+                    if (acresEl) acresEl.textContent = currentProperty.Acres || '0';
+                    if (amountEl) amountEl.textContent = `$${currentProperty['Amount Due'] || '0'}`;
+                    if (typeEl) typeEl.textContent = currentProperty['Parcel Type'] || 'N/A';
+                });
+            }
+        } catch (e) {
+            console.error('Erro ao carregar dados:', e);
+        }
+        
         let currentROI = 30;
         let currentTier = 'soft';
         let tierCosts = {

@@ -955,5 +955,58 @@
 
 - [x] Atualizar modelo do Gemini de "gemini-pro" para "gemini-1.5-flash"
 - [x] Testar função testGemini() com API key válida
-- [ ] Fazer commit e push
+- [x] Fazer commit e push
+
+
+
+
+## Dashboard v22.0 - Integração Completa (Protótipos + IA + APIs Imobiliárias)
+
+### Fase 1: Integração dos Protótipos (ESTRATÉGIA REVISADA)
+- [x] Analisar estrutura do screen2-prototype.html (TELA 2)
+- [x] Analisar estrutura do comps-bid-prototype.html (Comps + BID Calculator)
+- [x] Adicionar botão "Analisar" no dashboard-v21.html
+- [x] Implementar localStorage para passar dados entre páginas
+- [x] Atualizar screen2-prototype.html para carregar dados do localStorage
+- [x] Atualizar comps-bid-prototype.html para carregar dados do localStorage
+- [x] Adicionar navegação entre páginas (botões Voltar)
+- [x] Conectar Google Maps API (Street View + Satellite)
+- [ ] Testar fluxo completo: Dashboard → Análise → Comps
+
+### Fase 2: Análise Automática com IA
+- [ ] Criar função analyzePropertyWithOpenAI()
+- [ ] Criar função analyzePropertyWithGemini()
+- [ ] Criar função analyzePropertyWithPerplexity()
+- [ ] Implementar botão "🤖 Analisar com IA" em cada propriedade
+- [ ] Criar modal/painel para exibir análise
+- [ ] Gerar relatório de viabilidade automático
+- [ ] Incluir recomendações de investimento
+- [ ] Testar análise com propriedades reais
+
+### Fase 3: Integração de APIs Imobiliárias
+- [ ] Criar função searchZillowComparables()
+- [ ] Criar função searchRealtorProperties()
+- [ ] Criar função getRealtyMoleValuation()
+- [ ] Adicionar botão "🏡 Buscar Comparáveis" em cada propriedade
+- [ ] Criar painel de comparáveis (similar ao protótipo)
+- [ ] Mostrar dados de mercado em tempo real
+- [ ] Calcular médias e estatísticas
+- [ ] Testar com APIs reais
+
+### Fase 4: Painel de Análise de Comparáveis
+- [ ] Criar seção "📊 Análise de Mercado"
+- [ ] Mostrar propriedades comparáveis em tabela
+- [ ] Adicionar gráficos de preço por sqft
+- [ ] Calcular BID sugerido baseado em comparáveis
+- [ ] Adicionar filtros de distância e características
+- [ ] Exportar análise em PDF
+
+### Fase 5: Testes e Documentação
+- [ ] Testar fluxo completo: Importar → Visualizar → Analisar → Comparar
+- [ ] Testar todas as APIs (Google Maps, OpenAI, Gemini, Perplexity, Zillow, Realtor, Realty Mole)
+- [ ] Verificar responsividade mobile
+- [ ] Criar guia de uso completo (USER_GUIDE.md)
+- [ ] Criar changelog da v22.0
+- [ ] Fazer commits e push
+- [ ] Verificar deploy no Netlify
 

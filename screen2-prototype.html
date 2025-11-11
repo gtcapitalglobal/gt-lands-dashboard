@@ -266,13 +266,13 @@
                 <div id="group2" class="bg-white rounded-lg shadow-lg p-6 opacity-50">
                     <h2 class="text-lg font-bold text-gray-800 mb-4">💰 GRUPO 2: Análises Avançadas</h2>
                     <div class="space-y-3">
-                        <button disabled class="analysis-btn w-full px-4 py-3 bg-indigo-600 text-white rounded-lg text-left flex items-center gap-3">
+                        <button onclick="window.location.href='comps-bid-prototype.html'" class="analysis-btn w-full px-4 py-3 bg-indigo-600 text-white rounded-lg text-left flex items-center gap-3 hover:bg-indigo-700">
                             <span class="text-2xl">🔍</span>
                             <div class="flex-1">
                                 <div class="font-semibold">Comps + BID</div>
                                 <div class="text-xs opacity-90">Análise de mercado e lance</div>
                             </div>
-                            <span class="text-xs">🔒</span>
+                            <span class="text-xs">→</span>
                         </button>
                         
                         <button disabled class="analysis-btn w-full px-4 py-3 bg-blue-600 text-white rounded-lg text-left flex items-center gap-3">
@@ -309,36 +309,64 @@
     </div>
 
     <script>
-        // Dados de exemplo (substituir por dados reais)
-        const properties = [
-            {
-                address: "123 Main St, Miami, FL 33101",
-                parcel: "12-3456-789-0123",
-                county: "Miami-Dade",
-                acres: "0.25",
-                amount: "$2,500",
-                lat: 25.7617,
-                lng: -80.1918
-            },
-            {
-                address: "456 Oak Ave, Orlando, FL 32801",
-                parcel: "45-6789-012-3456",
-                county: "Orange",
-                acres: "0.50",
-                amount: "$3,200",
-                lat: 28.5383,
-                lng: -81.3792
-            },
-            {
-                address: "789 Pine Rd, Tampa, FL 33602",
-                parcel: "78-9012-345-6789",
-                county: "Hillsborough",
-                acres: "0.75",
-                amount: "$4,100",
-                lat: 27.9506,
-                lng: -82.4572
+        // Carregar dados do localStorage (vindos do dashboard)
+        let properties = [];
+        let currentProperty = null;
+        
+        try {
+            const storedProperty = localStorage.getItem('currentProperty');
+            const storedProperties = localStorage.getItem('allProperties');
+            
+            if (storedProperty) {
+                currentProperty = JSON.parse(storedProperty);
+                // Converter para formato do protótipo
+                properties = [{
+                    address: currentProperty.Address || 'N/A',
+                    parcel: currentProperty['Parcel Number'] || 'N/A',
+                    county: currentProperty.County || 'N/A',
+                    acres: currentProperty.Acres || '0',
+                    amount: `$${currentProperty['Amount Due'] || '0'}`,
+                    lat: parseFloat(currentProperty.Latitude) || 0,
+                    lng: parseFloat(currentProperty.Longitude) || 0,
+                    name: currentProperty.Name || 'N/A',
+                    city: currentProperty.City || 'N/A',
+                    type: currentProperty['Parcel Type'] || 'N/A'
+                }];
             }
-        ];
+            
+            if (storedProperties && properties.length === 0) {
+                const allProps = JSON.parse(storedProperties);
+                properties = allProps.map(p => ({
+                    address: p.Address || 'N/A',
+                    parcel: p['Parcel Number'] || 'N/A',
+                    county: p.County || 'N/A',
+                    acres: p.Acres || '0',
+                    amount: `$${p['Amount Due'] || '0'}`,
+                    lat: parseFloat(p.Latitude) || 0,
+                    lng: parseFloat(p.Longitude) || 0,
+                    name: p.Name || 'N/A',
+                    city: p.City || 'N/A',
+                    type: p['Parcel Type'] || 'N/A'
+                }));
+            }
+        } catch (e) {
+            console.error('Erro ao carregar dados:', e);
+        }
+        
+        // Dados de exemplo se não houver dados do localStorage
+        if (properties.length === 0) {
+            properties = [
+                {
+                    address: "123 Main St, Miami, FL 33101",
+                    parcel: "12-3456-789-0123",
+                    county: "Miami-Dade",
+                    acres: "0.25",
+                    amount: "$2,500",
+                    lat: 25.7617,
+                    lng: -80.1918
+                }
+            ];
+        }
         
         let currentPropertyIndex = 0;
         let currentSlide = 0;
@@ -486,7 +514,8 @@
         
         // Outras funções
         function goBack() {
-            window.history.back();
+            // Voltar para o dashboard
+            window.location.href = 'dashboard-v21.html';
         }
         
         function exportAnalysis() {

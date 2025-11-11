@@ -331,6 +331,39 @@
         </div>
 
         <div class="settings-grid">
+            <!-- Google Sheets Integration -->
+            <div class="settings-card">
+                <h2>🔒 Google Sheets Integration</h2>
+                <p style="color: #666; margin-bottom: 20px;">
+                    Gerencie todas as suas API keys de forma segura usando Google Sheets + Google Apps Script.
+                    <a href="GOOGLE-SHEETS-SETUP.md" target="_blank" style="color: #667eea; font-weight: bold;">📚 Ver Guia Completo</a>
+                </p>
+                
+                <div class="input-group">
+                    <label for="googleSheetsWebAppUrl">Web App URL</label>
+                    <input type="text" id="googleSheetsWebAppUrl" placeholder="https://script.google.com/macros/s/AKfycby.../exec">
+                    <small>URL do Google Apps Script publicado como Web App</small>
+                </div>
+                
+                <div class="input-group">
+                    <label for="googleSheetsPassword">Senha Secreta</label>
+                    <input type="password" id="googleSheetsPassword" placeholder="Sua senha secreta definida no Apps Script">
+                    <small>Senha SECRET_PASSWORD definida no Google Apps Script</small>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-success" onclick="saveGoogleSheetsConfig()">💾 Salvar Configuração</button>
+                    <button class="btn btn-primary" onclick="loadApiKeysFromSheets()">🔄 Carregar API Keys do Google Sheets</button>
+                    <button class="btn btn-secondary" onclick="toggleAutoLoad()" id="autoLoadBtn">⏸️ Auto-Load: OFF</button>
+                </div>
+                
+                <div id="googleSheetsResult"></div>
+                
+                <div class="saved-indicator" id="savedIndicatorSheets">
+                    ✅ Configuração do Google Sheets salva com sucesso!
+                </div>
+            </div>
+
             <!-- Google Maps API Settings -->
             <div class="settings-card">
                 <h2>🗺️ Google Maps API</h2>
@@ -411,8 +444,54 @@
                 </div>
                 <div id="perplexityTestResult"></div>
 
+            </div>
+
+            <!-- Real Estate API Settings -->
+            <div class="settings-card">
+                <h2>🏡 APIs Imobiliárias</h2>
+                
+                <h3>Zillow API (RapidAPI)</h3>
+                <div class="input-group">
+                    <label for="zillowApiKey">X-RapidAPI-Key</label>
+                    <input type="text" id="zillowApiKey" placeholder="sua-rapidapi-key...">
+                    <small>Para dados de propriedades do Zillow | <a href="https://rapidapi.com/apimaker/api/zillow-com1" target="_blank">🔗 Obter API Key</a></small>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-success" onclick="saveZillowKey()">💾 Salvar</button>
+                    <button class="btn btn-primary" onclick="testZillow()">🧪 Testar API</button>
+                </div>
+                <div id="zillowTestResult"></div>
+
+                <h3>Realtor.com API (RapidAPI)</h3>
+                <div class="input-group">
+                    <label for="realtorApiKey">X-RapidAPI-Key</label>
+                    <input type="text" id="realtorApiKey" placeholder="sua-rapidapi-key...">
+                    <small>Para dados de propriedades do Realtor.com | <a href="https://rapidapi.com/apidojo/api/realtor" target="_blank">🔗 Obter API Key</a></small>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-success" onclick="saveRealtorKey()">💾 Salvar</button>
+                    <button class="btn btn-primary" onclick="testRealtor()">🧪 Testar API</button>
+                </div>
+                <div id="realtorTestResult"></div>
+
+                <h3>Realty Mole API</h3>
+                <div class="input-group">
+                    <label for="realtyMoleApiKey">API Key</label>
+                    <input type="text" id="realtyMoleApiKey" placeholder="sua-realtymole-key...">
+                    <small>Para avaliações e dados de propriedades | <a href="https://www.realtymole.com/api" target="_blank">🔗 Obter API Key</a></small>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-success" onclick="saveRealtyMoleKey()">💾 Salvar</button>
+                    <button class="btn btn-primary" onclick="testRealtyMole()">🧪 Testar API</button>
+                </div>
+                <div id="realtyMoleTestResult"></div>
+
                 <hr style="margin: 30px 0; border: 1px solid #e0e0e0;">
-                <button class="btn btn-success" onclick="saveOtherApiKeys()">💾 Salvar Todas as APIs</button>
+                <button class="btn btn-success" onclick="saveRealEstateApiKeys()">💾 Salvar Todas as APIs Imobiliárias</button>
+                
+                <div class="saved-indicator" id="savedIndicatorRealEstate">
+                    ✅ APIs Imobiliárias salvas com sucesso!
+                </div>
                 
                 <div class="saved-indicator" id="savedIndicatorOther">
                     ✅ APIs salvas com sucesso!
@@ -428,11 +507,17 @@
             const openaiKey = localStorage.getItem('openaiApiKey');
             const geminiKey = localStorage.getItem('geminiApiKey');
             const perplexityKey = localStorage.getItem('perplexityApiKey');
+            const zillowKey = localStorage.getItem('zillowApiKey');
+            const realtorKey = localStorage.getItem('realtorApiKey');
+            const realtyMoleKey = localStorage.getItem('realtyMoleApiKey');
 
             if (googleMapsKey) document.getElementById('googleMapsApiKey').value = googleMapsKey;
             if (openaiKey) document.getElementById('openaiApiKey').value = openaiKey;
             if (geminiKey) document.getElementById('geminiApiKey').value = geminiKey;
             if (perplexityKey) document.getElementById('perplexityApiKey').value = perplexityKey;
+            if (zillowKey) document.getElementById('zillowApiKey').value = zillowKey;
+            if (realtorKey) document.getElementById('realtorApiKey').value = realtorKey;
+            if (realtyMoleKey) document.getElementById('realtyMoleApiKey').value = realtyMoleKey;
         });
 
         function saveGoogleMapsApiKey() {
@@ -863,6 +948,179 @@
                 `;
             }
         }
+
+        // ========================================
+        // GOOGLE SHEETS INTEGRATION
+        // ========================================
+
+        /**
+         * Salvar configuração do Google Sheets
+         */
+        function saveGoogleSheetsConfig() {
+            const webAppUrl = document.getElementById('googleSheetsWebAppUrl').value.trim();
+            const password = document.getElementById('googleSheetsPassword').value.trim();
+            
+            if (!webAppUrl || !password) {
+                alert('❌ Por favor, preencha a URL e a senha!');
+                return;
+            }
+            
+            localStorage.setItem('googleSheetsWebAppUrl', webAppUrl);
+            localStorage.setItem('googleSheetsPassword', password);
+            
+            const indicator = document.getElementById('savedIndicatorSheets');
+            indicator.style.display = 'block';
+            setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 3000);
+            
+            alert('✅ Configuração do Google Sheets salva com sucesso!');
+        }
+
+        /**
+         * Carregar API keys do Google Sheets
+         */
+        async function loadApiKeysFromSheets() {
+            const webAppUrl = localStorage.getItem('googleSheetsWebAppUrl');
+            const password = localStorage.getItem('googleSheetsPassword');
+            
+            if (!webAppUrl || !password) {
+                alert('❌ Configure a URL e senha do Google Sheets primeiro!');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('googleSheetsResult');
+            resultDiv.innerHTML = '<div class="status loading" style="margin-top: 10px;"><span class="loading-spinner"></span> Carregando API Keys do Google Sheets...</div>';
+            
+            try {
+                const response = await fetch(`${webAppUrl}?password=${encodeURIComponent(password)}`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Erro desconhecido');
+                }
+                
+                // Carregar API keys nos campos
+                const apiKeys = data.data;
+                let loadedCount = 0;
+                
+                if (apiKeys.googleMapsApiKey) {
+                    document.getElementById('googleMapsApiKey').value = apiKeys.googleMapsApiKey;
+                    localStorage.setItem('googleMapsApiKey', apiKeys.googleMapsApiKey);
+                    loadedCount++;
+                }
+                
+                if (apiKeys.openaiApiKey) {
+                    document.getElementById('openaiApiKey').value = apiKeys.openaiApiKey;
+                    localStorage.setItem('openaiApiKey', apiKeys.openaiApiKey);
+                    loadedCount++;
+                }
+                
+                if (apiKeys.geminiApiKey) {
+                    document.getElementById('geminiApiKey').value = apiKeys.geminiApiKey;
+                    localStorage.setItem('geminiApiKey', apiKeys.geminiApiKey);
+                    loadedCount++;
+                }
+                
+                if (apiKeys.perplexityApiKey) {
+                    document.getElementById('perplexityApiKey').value = apiKeys.perplexityApiKey;
+                    localStorage.setItem('perplexityApiKey', apiKeys.perplexityApiKey);
+                    loadedCount++;
+                }
+                
+                if (apiKeys.zillowApiKey || apiKeys.rapidApiKey) {
+                    const key = apiKeys.zillowApiKey || apiKeys.rapidApiKey;
+                    document.getElementById('zillowApiKey').value = key;
+                    localStorage.setItem('zillowApiKey', key);
+                    loadedCount++;
+                }
+                
+                if (apiKeys.realtorApiKey || apiKeys.rapidApiKey) {
+                    const key = apiKeys.realtorApiKey || apiKeys.rapidApiKey;
+                    document.getElementById('realtorApiKey').value = key;
+                    localStorage.setItem('realtorApiKey', key);
+                    loadedCount++;
+                }
+                
+                if (apiKeys.realtyMoleApiKey) {
+                    document.getElementById('realtyMoleApiKey').value = apiKeys.realtyMoleApiKey;
+                    localStorage.setItem('realtyMoleApiKey', apiKeys.realtyMoleApiKey);
+                    loadedCount++;
+                }
+                
+                resultDiv.innerHTML = `
+                    <div class="success-message" style="margin-top: 10px;">
+                        <strong>✅ Sucesso!</strong> ${loadedCount} API keys carregadas do Google Sheets!<br><br>
+                        <strong>Timestamp:</strong> ${data.timestamp}<br>
+                        <strong>APIs carregadas:</strong> ${Object.keys(apiKeys).join(', ')}
+                    </div>
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error-message" style="margin-top: 10px;">
+                        <strong>❌ Erro:</strong> ${error.message}<br><br>
+                        <strong>Possíveis causas:</strong><br>
+                        • URL do Web App incorreta<br>
+                        • Senha incorreta<br>
+                        • Google Apps Script não publicado<br>
+                        • Permissões não autorizadas<br><br>
+                        <a href="GOOGLE-SHEETS-SETUP.md" target="_blank">Ver Guia de Configuração →</a>
+                    </div>
+                `;
+            }
+        }
+
+        /**
+         * Ativar/Desativar carregamento automático
+         */
+        function toggleAutoLoad() {
+            const currentState = localStorage.getItem('googleSheetsAutoLoad') === 'true';
+            const newState = !currentState;
+            
+            localStorage.setItem('googleSheetsAutoLoad', newState.toString());
+            
+            const btn = document.getElementById('autoLoadBtn');
+            if (newState) {
+                btn.textContent = '▶️ Auto-Load: ON';
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-success');
+                alert('✅ Auto-Load ativado! API keys serão carregadas automaticamente ao abrir a página.');
+            } else {
+                btn.textContent = '⏸️ Auto-Load: OFF';
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-secondary');
+                alert('⏸️ Auto-Load desativado.');
+            }
+        }
+
+        /**
+         * Carregar configuração do Google Sheets ao carregar a página
+         */
+        window.addEventListener('DOMContentLoaded', () => {
+            // Carregar configuração salva
+            const webAppUrl = localStorage.getItem('googleSheetsWebAppUrl');
+            const password = localStorage.getItem('googleSheetsPassword');
+            const autoLoad = localStorage.getItem('googleSheetsAutoLoad') === 'true';
+            
+            if (webAppUrl) document.getElementById('googleSheetsWebAppUrl').value = webAppUrl;
+            if (password) document.getElementById('googleSheetsPassword').value = password;
+            
+            // Atualizar botão de auto-load
+            const btn = document.getElementById('autoLoadBtn');
+            if (autoLoad) {
+                btn.textContent = '▶️ Auto-Load: ON';
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-success');
+                
+                // Carregar automaticamente se configurado
+                if (webAppUrl && password) {
+                    setTimeout(() => {
+                        loadApiKeysFromSheets();
+                    }, 1000);
+                }
+            }
+        });
     </script>
 </body>
 </html>

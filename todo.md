@@ -847,3 +847,34 @@
 - [x] Fazer commit e push para GitHub
 - [x] Corrigir index.html para redirecionar para v21
 
+
+
+
+## Dashboard v21.4 - APIs Imobiliárias (Zillow, Realtor, Realty Mole)
+
+### Adicionar Seção de APIs Imobiliárias
+- [ ] Adicionar campo para Zillow API (RapidAPI)
+- [ ] Adicionar botão "💾 Salvar" para Zillow
+- [ ] Adicionar botão "🧪 Testar API" para Zillow
+- [ ] Adicionar campo para Realtor.com API (RapidAPI)
+- [ ] Adicionar botão "💾 Salvar" para Realtor.com
+- [ ] Adicionar botão "🧪 Testar API" para Realtor.com
+- [ ] Adicionar campo para Realty Mole API
+- [ ] Adicionar botão "💾 Salvar" para Realty Mole
+- [ ] Adicionar botão "🧪 Testar API" para Realty Mole
+- [ ] Adicionar links para documentação de cada API
+- [ ] Adicionar links para obter API keys
+
+### Testadores de API Imobiliária
+- [ ] Implementar teste real para Zillow API
+- [ ] Implementar teste real para Realtor.com API
+- [ ] Implementar teste real para Realty Mole API
+- [ ] Mostrar resultados visuais (sucesso/erro)
+- [ ] Adicionar mensagens de erro detalhadas
+
+### Checkpoint v21.4
+- [ ] Verificar código completo
+- [ ] Testar todas as funcionalidades
+- [ ] Atualizar versão no título do dashboard
+- [ ] Fazer commit e push para GitHub
+

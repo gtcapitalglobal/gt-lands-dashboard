@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google My Maps CSV Processor v2.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        .upload-area {
+            transition: all 0.3s ease;
+        }
+        .upload-area.dragging {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .file-item {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">🗺️ Google My Maps Manager v2.0</h1>
+            <p class="text-gray-600">Visualize, processe e mescle dados para Google My Maps</p>
+        </div>
+
+        <!-- Google My Maps Embed -->
+        <div class="bg-white rounded-lg shadow-lg p-4 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">📍 Seu Mapa Atual</h2>
+            <div class="w-full" style="height: 600px;">
+                <iframe 
+                    src="https://www.google.com/maps/d/u/0/embed?mid=12ad70pBtnlaU2y6YfRVUNMERVXeC81Y&ehbc=2E312F" 
+                    width="100%" 
+                    height="100%" 
+                    style="border:0; border-radius: 8px;"
+                    allowfullscreen>
+                </iframe>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left Column: Uploads -->
+            <div class="space-y-6">
+                <!-- Custom Fields -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">✏️ Personalizar Nome (Opcional)</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Condado</label>
+                            <input type="text" id="customCounty" placeholder="Ex: Polk" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Data (DDMM)</label>
+                            <input type="text" id="customDate" placeholder="Ex: 2011" maxlength="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    <div id="previewName" class="hidden mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p class="text-sm"><strong>Preview:</strong> <span id="previewText" class="text-blue-700 font-semibold"></span></p>
+                    </div>
+                </div>
+
+                <!-- New CSV Upload -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">📄 Novo CSV</h3>
+                        <button id="clearNewCSV" class="hidden text-red-600 hover:text-red-800 text-sm">🗑️ Limpar</button>
+                    </div>
+                    <div id="newCSVUpload" class="upload-area border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500">
+                        <svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <p class="text-gray-700 font-medium">Arraste ou clique para fazer upload</p>
+                        <p class="text-xs text-gray-500 mt-2">Arquivo CSV com novas propriedades</p>
+                        <input type="file" id="newCSVInput" accept=".csv" class="hidden">
+                    </div>
+                    <div id="newCSVInfo" class="hidden mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <p class="text-sm text-green-800"><strong id="newCSVName"></strong></p>
+                        <p class="text-xs text-green-600 mt-1"><span id="newCSVCount"></span> propriedades</p>
+                    </div>
+                </div>
+
+                <!-- Existing KML Upload -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">📦 KMLs Existentes (Opcional)</h3>
+                        <button id="clearAllKML" class="hidden text-red-600 hover:text-red-800 text-sm">🗑️ Limpar Todos</button>
+                    </div>
+                    <div id="kmlUpload" class="upload-area border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500">
+                        <svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <p class="text-gray-700 font-medium">Arraste ou clique para fazer upload</p>
+                        <p class="text-xs text-gray-500 mt-2">Múltiplos arquivos KML aceitos</p>
+                        <input type="file" id="kmlInput" accept=".kml" multiple class="hidden">
+                    </div>
+                    <div id="kmlList" class="hidden mt-4 space-y-2"></div>
+                </div>
+            </div>
+
+            <!-- Right Column: Options & Actions -->
+            <div class="space-y-6">
+                <!-- Category Selection -->
+                <div id="categorySelection" class="hidden bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">🎯 Selecionar Categorias</h3>
+                    <p class="text-sm text-gray-600 mb-4">Escolha quais propriedades incluir no arquivo final</p>
+                    <div class="space-y-3">
+                        <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                            <input type="checkbox" id="includeNew" checked class="w-5 h-5 text-blue-600 rounded">
+                            <span class="ml-3 text-gray-700">🆕 Novas Propriedades (CSV)</span>
+                        </label>
+                        <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                            <input type="checkbox" id="includeAvailable" class="w-5 h-5 text-green-600 rounded">
+                            <span class="ml-3 text-gray-700">🟢 Available Lands</span>
+                        </label>
+                        <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                            <input type="checkbox" id="includePartners" class="w-5 h-5 text-blue-600 rounded">
+                            <span class="ml-3 text-gray-700">🤝 Partners Available</span>
+                        </label>
+                        <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                            <input type="checkbox" id="includeSold" class="w-5 h-5 text-red-600 rounded">
+                            <span class="ml-3 text-gray-700">🔴 Sold Lands</span>
+                        </label>
+                        <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                            <input type="checkbox" id="includeBlocked" class="w-5 h-5 text-yellow-600 rounded">
+                            <span class="ml-3 text-gray-700">⏸️ Blocked/Paused</span>
+                        </label>
+                        <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                            <input type="checkbox" id="includeOthers" class="w-5 h-5 text-purple-600 rounded">
+                            <span class="ml-3 text-gray-700">📋 Outros</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div id="summary" class="hidden bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">📊 Resumo</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Novas:</span>
+                            <span id="countNew" class="font-semibold text-blue-600">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Existentes:</span>
+                            <span id="countExisting" class="font-semibold text-green-600">0</span>
+                        </div>
+                        <div class="flex justify-between pt-2 border-t">
+                            <span class="text-gray-800 font-semibold">Total:</span>
+                            <span id="countTotal" class="font-bold text-gray-800">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div id="actions" class="hidden bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">⚡ Ações</h3>
+                    <div class="space-y-3">
+                        <button id="processBtn" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                            🔄 Processar e Mesclar
+                        </button>
+                        <button id="downloadBtn" class="hidden w-full bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                            ⬇️ Baixar CSV Mesclado
+                        </button>
+                        <button id="resetBtn" class="w-full bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
+                            🔄 Recomeçar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <div id="loading" class="hidden bg-white rounded-lg shadow-lg p-6 text-center">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p class="text-gray-600">Processando...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let newCSVData = null;
+        let kmlFiles = [];
+        let processedData = null;
+
+        // Preview dinâmico
+        function updatePreview() {
+            const county = document.getElementById('customCounty').value.trim();
+            const date = document.getElementById('customDate').value.trim();
+            const previewDiv = document.getElementById('previewName');
+            const previewText = document.getElementById('previewText');
+            
+            if (county && date && date.length === 4) {
+                previewText.textContent = `${county}_${date}_coordinates.csv`;
+                previewDiv.classList.remove('hidden');
+            } else if (county || date) {
+                previewDiv.classList.remove('hidden');
+                if (!county) {
+                    previewText.textContent = '[Condado]_' + (date || '[Data]') + '_coordinates.csv';
+                } else {
+                    previewText.textContent = county + '_' + (date || '[Data]') + '_coordinates.csv';
+                }
+            } else {
+                previewDiv.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('customCounty').addEventListener('input', updatePreview);
+        document.getElementById('customDate').addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+            updatePreview();
+        });
+
+        // New CSV Upload
+        const newCSVUpload = document.getElementById('newCSVUpload');
+        const newCSVInput = document.getElementById('newCSVInput');
+
+        newCSVUpload.addEventListener('click', () => newCSVInput.click());
+        newCSVUpload.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            newCSVUpload.classList.add('dragging');
+        });
+        newCSVUpload.addEventListener('dragleave', () => {
+            newCSVUpload.classList.remove('dragging');
+        });
+        newCSVUpload.addEventListener('drop', (e) => {
+            e.preventDefault();
+            newCSVUpload.classList.remove('dragging');
+            if (e.dataTransfer.files[0]) {
+                handleNewCSV(e.dataTransfer.files[0]);
+            }
+        });
+        newCSVInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) {
+                handleNewCSV(e.target.files[0]);
+            }
+        });
+
+        function handleNewCSV(file) {
+            if (!file.name.endsWith('.csv')) {
+                alert('Por favor, envie um arquivo CSV!');
+                return;
+            }
+
+            Papa.parse(file, {
+                header: true,
+                complete: (results) => {
+                    newCSVData = results.data.filter(row => row.Coordinates && row.Coordinates.includes(','));
+                    
+                    document.getElementById('newCSVInfo').classList.remove('hidden');
+                    document.getElementById('newCSVName').textContent = file.name;
+                    document.getElementById('newCSVCount').textContent = newCSVData.length;
+                    document.getElementById('clearNewCSV').classList.remove('hidden');
+                    
+                    updateUI();
+                }
+            });
+        }
+
+        document.getElementById('clearNewCSV').addEventListener('click', () => {
+            newCSVData = null;
+            newCSVInput.value = '';
+            document.getElementById('newCSVInfo').classList.add('hidden');
+            document.getElementById('clearNewCSV').classList.add('hidden');
+            updateUI();
+        });
+
+        // KML Upload
+        const kmlUpload = document.getElementById('kmlUpload');
+        const kmlInput = document.getElementById('kmlInput');
+
+        kmlUpload.addEventListener('click', () => kmlInput.click());
+        kmlUpload.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            kmlUpload.classList.add('dragging');
+        });
+        kmlUpload.addEventListener('dragleave', () => {
+            kmlUpload.classList.remove('dragging');
+        });
+        kmlUpload.addEventListener('drop', (e) => {
+            e.preventDefault();
+            kmlUpload.classList.remove('dragging');
+            handleKMLFiles(e.dataTransfer.files);
+        });
+        kmlInput.addEventListener('change', (e) => {
+            handleKMLFiles(e.target.files);
+        });
+
+        function handleKMLFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.name.endsWith('.kml')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        kmlFiles.push({
+                            name: file.name,
+                            content: e.target.result,
+                            category: detectCategory(file.name)
+                        });
+                        updateKMLList();
+                        updateUI();
+                    };
+                    reader.readAsText(file);
+                }
+            });
+        }
+
+        function detectCategory(filename) {
+            const lower = filename.toLowerCase();
+            if (lower.includes('available') && !lower.includes('partner')) return 'available';
+            if (lower.includes('partner')) return 'partners';
+            if (lower.includes('sold')) return 'sold';
+            if (lower.includes('blocked') || lower.includes('paused')) return 'blocked';
+            if (lower.includes('outros') || lower.includes('other')) return 'others';
+            return 'unknown';
+        }
+
+        function updateKMLList() {
+            const kmlList = document.getElementById('kmlList');
+            kmlList.innerHTML = '';
+            
+            if (kmlFiles.length > 0) {
+                kmlList.classList.remove('hidden');
+                document.getElementById('clearAllKML').classList.remove('hidden');
+                
+                kmlFiles.forEach((file, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'file-item flex items-center justify-between p-3 bg-gray-50 rounded-lg border';
+                    item.innerHTML = `
+                        <div class="flex items-center">
+                            <span class="text-2xl mr-2">${getCategoryIcon(file.category)}</span>
+                            <div>
+                                <p class="font-medium text-gray-800 text-sm">${file.name}</p>
+                                <p class="text-xs text-gray-500">${getCategoryName(file.category)}</p>
+                            </div>
+                        </div>
+                        <button onclick="removeKML(${index})" class="text-red-600 hover:text-red-800">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    `;
+                    kmlList.appendChild(item);
+                });
+            } else {
+                kmlList.classList.add('hidden');
+                document.getElementById('clearAllKML').classList.add('hidden');
+            }
+        }
+
+        function getCategoryIcon(category) {
+            const icons = {
+                available: '🟢',
+                partners: '🤝',
+                sold: '🔴',
+                blocked: '⏸️',
+                others: '📋',
+                unknown: '❓'
+            };
+            return icons[category] || '📄';
+        }
+
+        function getCategoryName(category) {
+            const names = {
+                available: 'Available Lands',
+                partners: 'Partners Available',
+                sold: 'Sold Lands',
+                blocked: 'Blocked/Paused',
+                others: 'Outros',
+                unknown: 'Desconhecido'
+            };
+            return names[category] || 'Arquivo KML';
+        }
+
+        window.removeKML = function(index) {
+            kmlFiles.splice(index, 1);
+            updateKMLList();
+            updateUI();
+        };
+
+        document.getElementById('clearAllKML').addEventListener('click', () => {
+            if (confirm('Tem certeza que deseja remover todos os arquivos KML?')) {
+                kmlFiles = [];
+                kmlInput.value = '';
+                updateKMLList();
+                updateUI();
+            }
+        });
+
+        function updateUI() {
+            const hasNewCSV = newCSVData !== null;
+            const hasKML = kmlFiles.length > 0;
+            
+            if (hasKML) {
+                document.getElementById('categorySelection').classList.remove('hidden');
+            } else {
+                document.getElementById('categorySelection').classList.add('hidden');
+            }
+            
+            if (hasNewCSV || hasKML) {
+                document.getElementById('summary').classList.remove('hidden');
+                document.getElementById('actions').classList.remove('hidden');
+                updateSummary();
+            } else {
+                document.getElementById('summary').classList.add('hidden');
+                document.getElementById('actions').classList.add('hidden');
+            }
+        }
+
+        function updateSummary() {
+            const newCount = newCSVData ? newCSVData.length : 0;
+            // KML count will be calculated after parsing
+            document.getElementById('countNew').textContent = newCount;
+            document.getElementById('countExisting').textContent = '...';
+            document.getElementById('countTotal').textContent = '...';
+        }
+
+        document.getElementById('processBtn').addEventListener('click', processData);
+        document.getElementById('downloadBtn').addEventListener('click', downloadMerged);
+        document.getElementById('resetBtn').addEventListener('click', reset);
+
+        function processData() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('actions').classList.add('hidden');
+            
+            setTimeout(() => {
+                try {
+                    const merged = mergeData();
+                    processedData = merged;
+                    
+                    document.getElementById('countExisting').textContent = merged.existing;
+                    document.getElementById('countTotal').textContent = merged.total;
+                    
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('actions').classList.remove('hidden');
+                    document.getElementById('downloadBtn').classList.remove('hidden');
+                    
+                    alert(`✅ Processamento concluído!\n\nNovas: ${merged.new}\nExistentes: ${merged.existing}\nTotal: ${merged.total}`);
+                } catch (error) {
+                    alert('❌ Erro ao processar: ' + error.message);
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('actions').classList.remove('hidden');
+                }
+            }, 500);
+        }
+
+        function mergeData() {
+            let allProperties = [];
+            let newCount = 0;
+            let existingCount = 0;
+            
+            // Add new CSV data
+            if (newCSVData && document.getElementById('includeNew').checked) {
+                newCSVData.forEach(row => {
+                    const coords = row.Coordinates.replace(/"/g, '').trim();
+                    const [lat, lon] = coords.split(',');
+                    
+                    allProperties.push({
+                        'Name': row.Name || '',
+                        'Parcel ID': row['Parcel Number'] || '',
+                        'Address': row.Address || '',
+                        'City': row.City || '',
+                        'State': row.State || '',
+                        'Zip': row.Zip || '',
+                        'County': row.County || '',
+                        'Acres': row.Acres || '',
+                        'Amount Due': row['Amount Due'] || '',
+                        'Latitude': lat.trim(),
+                        'Longitude': lon.trim(),
+                        'Coordinates': coords,
+                        'Status': 'Novo',
+                        'Parcel Fair Report': row['Parcel Fair Report'] || '',
+                        'Next Auction': row['Next Auction'] || ''
+                    });
+                    newCount++;
+                });
+            }
+            
+            // Parse and add KML data
+            kmlFiles.forEach(file => {
+                const shouldInclude = 
+                    (file.category === 'available' && document.getElementById('includeAvailable').checked) ||
+                    (file.category === 'partners' && document.getElementById('includePartners').checked) ||
+                    (file.category === 'sold' && document.getElementById('includeSold').checked) ||
+                    (file.category === 'blocked' && document.getElementById('includeBlocked').checked) ||
+                    (file.category === 'others' && document.getElementById('includeOthers').checked);
+                
+                if (shouldInclude) {
+                    const properties = parseKML(file.content, file.category);
+                    allProperties = allProperties.concat(properties);
+                    existingCount += properties.length;
+                }
+            });
+            
+            return {
+                properties: allProperties,
+                new: newCount,
+                existing: existingCount,
+                total: allProperties.length
+            };
+        }
+
+        function parseKML(kmlContent, category) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(kmlContent, 'text/xml');
+            const placemarks = xmlDoc.getElementsByTagName('Placemark');
+            const properties = [];
+            
+            for (let placemark of placemarks) {
+                const name = placemark.getElementsByTagName('name')[0]?.textContent || '';
+                const coordinates = placemark.getElementsByTagName('coordinates')[0]?.textContent.trim();
+                
+                if (coordinates) {
+                    const [lon, lat] = coordinates.split(',').map(c => c.trim());
+                    
+                    properties.push({
+                        'Name': name,
+                        'Parcel ID': '',
+                        'Address': '',
+                        'City': '',
+                        'State': 'FL',
+                        'Zip': '',
+                        'County': '',
+                        'Acres': '',
+                        'Amount Due': '',
+                        'Latitude': lat,
+                        'Longitude': lon,
+                        'Coordinates': `${lat},${lon}`,
+                        'Status': getCategoryName(category),
+                        'Parcel Fair Report': '',
+                        'Next Auction': ''
+                    });
+                }
+            }
+            
+            return properties;
+        }
+
+        function downloadMerged() {
+            if (!processedData) return;
+            
+            const customCounty = document.getElementById('customCounty').value.trim();
+            const customDate = document.getElementById('customDate').value.trim();
+            
+            let fileName = 'merged_properties';
+            if (customCounty && customDate) {
+                fileName = `${customCounty}_${customDate}_merged`;
+            } else if (customCounty) {
+                fileName = `${customCounty}_merged`;
+            }
+            fileName += '_coordinates.csv';
+            
+            const csv = Papa.unparse(processedData.properties);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function reset() {
+            if (confirm('Tem certeza que deseja recomeçar? Todos os dados serão perdidos.')) {
+                newCSVData = null;
+                kmlFiles = [];
+                processedData = null;
+                newCSVInput.value = '';
+                kmlInput.value = '';
+                document.getElementById('customCounty').value = '';
+                document.getElementById('customDate').value = '';
+                document.getElementById('newCSVInfo').classList.add('hidden');
+                document.getElementById('clearNewCSV').classList.add('hidden');
+                document.getElementById('previewName').classList.add('hidden');
+                document.getElementById('downloadBtn').classList.add('hidden');
+                updateKMLList();
+                updateUI();
+            }
+        }
+    </script>
+</body>
+</html>
+

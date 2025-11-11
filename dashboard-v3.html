@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADM Maps - Property Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #map { height: 600px; width: 100%; border-radius: 8px; }
+        .upload-area { transition: all 0.3s ease; }
+        .upload-area.dragging { border-color: #3b82f6; background-color: #eff6ff; }
+        table { font-size: 0.875rem; }
+        th { position: sticky; top: 0; background: #1f2937; z-index: 10; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">🗺️ ADM Maps - Property Manager</h1>
+            <p class="text-gray-600">Visualize e compare propriedades do Parcel Fair</p>
+        </div>
+
+        <!-- Map Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">📍 Mapa de Propriedades</h2>
+                <button id="deleteNewBtn" class="hidden bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors">
+                    🗑️ Deletar Novas Propriedades
+                </button>
+            </div>
+            <div id="map"></div>
+            <div class="mt-4 flex items-center gap-4 text-sm">
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-blue-600 rounded-full"></div>
+                    <span class="text-gray-700">Propriedades ADM (permanentes)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-yellow-400 rounded-full"></div>
+                    <span class="text-gray-700">Novas Propriedades (temporárias)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">📤 Importar CSV do Parcel Fair</h3>
+            <div id="uploadArea" class="upload-area border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500">
+                <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <p class="text-lg text-gray-700 font-medium mb-2">Arraste e solte ou clique para selecionar</p>
+                <p class="text-sm text-gray-500">Arquivo CSV exportado do Parcel Fair</p>
+                <input type="file" id="csvInput" accept=".csv" class="hidden" multiple>
+            </div>
+            <div id="uploadedFiles" class="hidden mt-4 space-y-2"></div>
+        </div>
+
+        <!-- Downloads Section -->
+        <div id="downloadsSection" class="hidden bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">⬇️ Downloads por Condado</h3>
+            <div id="downloadButtons" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- Summary Section -->
+        <div id="summarySection" class="hidden bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">📊 Resumo</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600">Total de Propriedades</p>
+                    <p id="totalCount" class="text-2xl font-bold text-blue-600">0</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600">Condados</p>
+                    <p id="countyCount" class="text-2xl font-bold text-green-600">0</p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600">Arquivos Carregados</p>
+                    <p id="fileCount" class="text-2xl font-bold text-purple-600">0</p>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600">No Mapa</p>
+                    <p id="mapCount" class="text-2xl font-bold text-yellow-600">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table Section -->
+        <div id="tableSection" class="hidden bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">📋 Dados Completos</h3>
+            <div class="overflow-x-auto max-h-96 overflow-y-auto">
+                <table id="dataTable" class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-800 text-white">
+                        <tr id="tableHeader"></tr>
+                    </thead>
+                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([27.3195, -81.3675], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Layer groups
+        const newPropertiesLayer = L.layerGroup().addTo(map);
+        
+        // Data storage
+        let allProperties = [];
+        let propertiesByCounty = {};
+        let uploadedFileNames = [];
+
+        // Yellow marker icon
+        const yellowIcon = L.icon({
+            iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAzNiI+PHBhdGggZmlsbD0iI0ZGRDcwMCIgZD0iTTEyIDJDNy41OCAyIDQgNS41OCA0IDEwYzAgNi41IDggMTQgOCAxNHM4LTcuNSA4LTE0YzAtNC40Mi0zLjU4LTgtOC04eiIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTAiIHI9IjMiIGZpbGw9IiNGRkYiLz48L3N2Zz4=',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34]
+        });
+
+        // Upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const csvInput = document.getElementById('csvInput');
+
+        uploadArea.addEventListener('click', () => csvInput.click());
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragging');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragging');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragging');
+            handleFiles(e.dataTransfer.files);
+        });
+        csvInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.name.endsWith('.csv')) {
+                    uploadedFileNames.push(file.name);
+                    Papa.parse(file, {
+                        header: true,
+                        complete: (results) => {
+                            processCSV(results.data, file.name);
+                        }
+                    });
+                }
+            });
+        }
+
+        function processCSV(data, fileName) {
+            const validData = data.filter(row => row.Coordinates && row.Coordinates.includes(','));
+            
+            validData.forEach(row => {
+                const coords = row.Coordinates.replace(/"/g, '').trim();
+                const [lat, lon] = coords.split(',').map(c => parseFloat(c.trim()));
+                
+                if (!isNaN(lat) && !isNaN(lon)) {
+                    const property = {
+                        ...row,
+                        Latitude: lat,
+                        Longitude: lon,
+                        fileName: fileName
+                    };
+                    
+                    allProperties.push(property);
+                    
+                    // Group by county
+                    const county = row.County || 'Unknown';
+                    if (!propertiesByCounty[county]) {
+                        propertiesByCounty[county] = [];
+                    }
+                    propertiesByCounty[county].push(property);
+                    
+                    // Add to map
+                    const marker = L.marker([lat, lon], { icon: yellowIcon })
+                        .bindPopup(`
+                            <div class="p-2">
+                                <h4 class="font-bold text-lg mb-2">${row.Name || 'N/A'}</h4>
+                                <p class="text-sm"><strong>Parcel:</strong> ${row['Parcel Number'] || 'N/A'}</p>
+                                <p class="text-sm"><strong>Address:</strong> ${row.Address || 'N/A'}</p>
+                                <p class="text-sm"><strong>City:</strong> ${row.City || 'N/A'}</p>
+                                <p class="text-sm"><strong>County:</strong> ${row.County || 'N/A'}</p>
+                                <p class="text-sm"><strong>Acres:</strong> ${row.Acres || 'N/A'}</p>
+                                <p class="text-sm"><strong>Amount Due:</strong> ${row['Amount Due'] || 'N/A'}</p>
+                                <p class="text-sm"><strong>Next Auction:</strong> ${row['Next Auction'] || 'N/A'}</p>
+                                <a href="${row['Parcel Fair Report']}" target="_blank" class="text-blue-600 hover:underline text-sm">Ver Relatório</a>
+                            </div>
+                        `);
+                    newPropertiesLayer.addLayer(marker);
+                }
+            });
+            
+            updateUI();
+        }
+
+        function updateUI() {
+            // Update summary
+            document.getElementById('summarySection').classList.remove('hidden');
+            document.getElementById('totalCount').textContent = allProperties.length;
+            document.getElementById('countyCount').textContent = Object.keys(propertiesByCounty).length;
+            document.getElementById('fileCount').textContent = uploadedFileNames.length;
+            document.getElementById('mapCount').textContent = allProperties.length;
+            
+            // Show delete button
+            if (allProperties.length > 0) {
+                document.getElementById('deleteNewBtn').classList.remove('hidden');
+            }
+            
+            // Update uploaded files list
+            const uploadedFilesDiv = document.getElementById('uploadedFiles');
+            if (uploadedFileNames.length > 0) {
+                uploadedFilesDiv.classList.remove('hidden');
+                uploadedFilesDiv.innerHTML = uploadedFileNames.map(name => `
+                    <div class="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-sm font-medium text-green-800">${name}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // Create download buttons
+            createDownloadButtons();
+            
+            // Update table
+            updateTable();
+            
+            // Fit map to markers
+            if (allProperties.length > 0) {
+                const bounds = newPropertiesLayer.getBounds();
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
+        }
+
+        function createDownloadButtons() {
+            const downloadsSection = document.getElementById('downloadsSection');
+            const downloadButtons = document.getElementById('downloadButtons');
+            
+            if (Object.keys(propertiesByCounty).length > 0) {
+                downloadsSection.classList.remove('hidden');
+                downloadButtons.innerHTML = '';
+                
+                Object.entries(propertiesByCounty).forEach(([county, properties]) => {
+                    const date = extractDate(properties[0]['Next Auction']);
+                    const fileName = `${county}_${date}_coordinates.csv`;
+                    
+                    const button = document.createElement('button');
+                    button.className = 'bg-blue-600 text-white px-6 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-left';
+                    button.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-lg font-bold">${county}</p>
+                                <p class="text-sm opacity-90">${properties.length} propriedades</p>
+                            </div>
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                        </div>
+                    `;
+                    button.onclick = () => downloadCountyCSV(county, properties, fileName);
+                    downloadButtons.appendChild(button);
+                });
+            }
+        }
+
+        function extractDate(dateString) {
+            if (!dateString) return '0000';
+            const parts = dateString.split('/');
+            if (parts.length === 3) {
+                const day = parts[1].padStart(2, '0');
+                const month = parts[0].padStart(2, '0');
+                return day + month;
+            }
+            return '0000';
+        }
+
+        function downloadCountyCSV(county, properties, fileName) {
+            const csvData = properties.map(prop => ({
+                'Name': prop.Name || '',
+                'Parcel ID': prop['Parcel Number'] || '',
+                'Address': prop.Address || '',
+                'City': prop.City || '',
+                'State': prop.State || '',
+                'Zip': prop.Zip || '',
+                'County': prop.County || '',
+                'Acres': prop.Acres || '',
+                'Amount Due': prop['Amount Due'] || '',
+                'Latitude': prop.Latitude,
+                'Longitude': prop.Longitude,
+                'Coordinates': `${prop.Latitude},${prop.Longitude}`,
+                'Parcel Fair Report': prop['Parcel Fair Report'] || '',
+                'Next Auction': prop['Next Auction'] || ''
+            }));
+            
+            const csv = Papa.unparse(csvData);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function updateTable() {
+            if (allProperties.length === 0) return;
+            
+            document.getElementById('tableSection').classList.remove('hidden');
+            
+            // Get all column names
+            const columns = Object.keys(allProperties[0]).filter(col => col !== 'fileName');
+            
+            // Create header
+            const tableHeader = document.getElementById('tableHeader');
+            tableHeader.innerHTML = columns.map(col => 
+                `<th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">${col}</th>`
+            ).join('');
+            
+            // Create rows
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = allProperties.map(prop => 
+                `<tr class="hover:bg-gray-50">
+                    ${columns.map(col => {
+                        let value = prop[col] || '';
+                        if (col === 'Parcel Fair Report' && value) {
+                            return `<td class="px-4 py-2 whitespace-nowrap"><a href="${value}" target="_blank" class="text-blue-600 hover:underline">Ver</a></td>`;
+                        }
+                        return `<td class="px-4 py-2 whitespace-nowrap">${value}</td>`;
+                    }).join('')}
+                </tr>`
+            ).join('');
+        }
+
+        // Delete new properties
+        document.getElementById('deleteNewBtn').addEventListener('click', () => {
+            if (confirm('Tem certeza que deseja deletar todas as novas propriedades? Esta ação não pode ser desfeita.')) {
+                // Clear map markers
+                newPropertiesLayer.clearLayers();
+                
+                // Clear data
+                allProperties = [];
+                propertiesByCounty = {};
+                uploadedFileNames = [];
+                csvInput.value = '';
+                
+                // Hide sections
+                document.getElementById('deleteNewBtn').classList.add('hidden');
+                document.getElementById('summarySection').classList.add('hidden');
+                document.getElementById('downloadsSection').classList.add('hidden');
+                document.getElementById('tableSection').classList.add('hidden');
+                document.getElementById('uploadedFiles').classList.add('hidden');
+                
+                // Reset map view
+                map.setView([27.3195, -81.3675], 12);
+                
+                alert('✅ Todas as novas propriedades foram deletadas!');
+            }
+        });
+    </script>
+</body>
+</html>
+

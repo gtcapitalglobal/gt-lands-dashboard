@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google My Maps CSV Processor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        .upload-area {
+            transition: all 0.3s ease;
+        }
+        .upload-area.dragging {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">Google My Maps CSV Processor</h1>
+            <p class="text-gray-600">Processe arquivos CSV e gere dados formatados para Google My Maps</p>
+        </div>
+
+        <!-- Upload Area -->
+        <div id="uploadSection" class="max-w-2xl mx-auto">
+            <!-- Custom Fields -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">✏️ Personalizar Nome do Arquivo (Opcional)</h3>
+                <p class="text-sm text-gray-600 mb-4">Deixe em branco para usar os valores do CSV automaticamente</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nome do Condado</label>
+                        <input type="text" id="customCounty" placeholder="Ex: Polk" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">Exemplo: Polk, Putnam, Highlands</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Data do Leilão (DD/MM)</label>
+                        <input type="text" id="customDate" placeholder="Ex: 2011" maxlength="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">Formato: DDMM (Ex: 2011 = 20 de novembro)</p>
+                    </div>
+                </div>
+                <div id="previewName" class="hidden mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-sm text-gray-700"><strong>Preview do nome:</strong> <span id="previewText" class="text-blue-700 font-semibold"></span></p>
+                </div>
+            </div>
+
+            <div id="uploadArea" class="upload-area border-4 border-dashed border-gray-300 rounded-lg p-12 text-center bg-white">
+                <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">Arraste e solte seu arquivo CSV aqui</h3>
+                <p class="text-gray-500 mb-1">ou</p>
+                <label class="inline-block">
+                    <input type="file" id="fileInput" accept=".csv" class="hidden">
+                    <span class="bg-blue-600 text-white px-6 py-3 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors inline-block">
+                        Selecionar Arquivo
+                    </span>
+                </label>
+                <p class="text-xs text-gray-400 mt-3">Tamanho máximo: 5 MB</p>
+                <div id="loadingIndicator" class="hidden mt-4">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                    <p class="text-gray-600 mt-2">Processando...</p>
+                </div>
+                <div id="errorMessage" class="hidden mt-4 p-4 bg-red-100 border-2 border-red-400 rounded-lg">
+                    <div class="flex items-center justify-center">
+                        <svg class="w-6 h-6 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p id="errorText" class="text-red-800 font-semibold"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden space-y-6">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <p class="text-gray-500 text-sm">Condado</p>
+                    <p id="countyName" class="text-2xl font-bold text-gray-800"></p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <p class="text-gray-500 text-sm">Data do Leilão</p>
+                    <p id="auctionDate" class="text-2xl font-bold text-gray-800"></p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <p class="text-gray-500 text-sm">Nome da Camada</p>
+                    <p id="layerName" class="text-xl font-bold text-gray-800"></p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <p class="text-gray-500 text-sm">Propriedades</p>
+                    <p id="totalProperties" class="text-2xl font-bold text-gray-800"></p>
+                </div>
+            </div>
+
+            <!-- Split Files Warning -->
+            <div id="splitWarning" class="hidden bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4">
+                <div class="flex items-start">
+                    <svg class="w-6 h-6 text-yellow-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <div>
+                        <h3 class="font-semibold text-yellow-800 mb-1">⚠️ Arquivo Grande Detectado</h3>
+                        <p class="text-yellow-700 text-sm">O arquivo foi automaticamente dividido em <strong id="splitCount"></strong> partes para respeitar o limite de 5 MB do Google My Maps.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Files List -->
+            <div id="filesList" class="hidden bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">📁 Arquivos Gerados</h3>
+                <div id="filesListContent" class="space-y-2"></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center">
+                <button id="downloadBtn" class="bg-green-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-lg">
+                    ⬇️ Baixar CSV para Google My Maps
+                </button>
+                <button id="downloadAllBtn" class="hidden ml-4 bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg">
+                    📦 Baixar Todos os Arquivos (ZIP)
+                </button>
+                <button id="resetBtn" class="ml-4 bg-gray-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
+                    Processar Outro Arquivo
+                </button>
+            </div>
+
+            <!-- Map -->
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="p-4 bg-gray-50 border-b">
+                    <h2 class="text-xl font-semibold text-gray-800">Visualização no Mapa</h2>
+                </div>
+                <div id="map" class="h-96"></div>
+            </div>
+
+            <!-- Properties Table -->
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="p-4 bg-gray-50 border-b">
+                    <h2 class="text-xl font-semibold text-gray-800">Propriedades Processadas</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Parcel ID</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Nome</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Endereço</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Cidade</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Acres</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Valor Devido</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Coordenadas</th>
+                            </tr>
+                        </thead>
+                        <tbody id="propertiesTable" class="divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                    <div id="tableFooter" class="hidden p-4 text-center text-gray-500 text-sm"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let processedData = null;
+        let map = null;
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadSection = document.getElementById('uploadSection');
+        const resultsSection = document.getElementById('resultsSection');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+
+        // Drag and Drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragging');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragging');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragging');
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.csv')) {
+                if (validateFileSize(file)) {
+                    processFile(file);
+                }
+            } else {
+                showError('Por favor, envie um arquivo CSV!');
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                if (validateFileSize(file)) {
+                    processFile(file);
+                }
+            }
+        });
+
+        function validateFileSize(file) {
+            hideError();
+            return true; // Agora permitimos arquivos grandes e dividimos automaticamente
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorMessage.classList.remove('hidden');
+            loadingIndicator.classList.add('hidden');
+        }
+
+        function hideError() {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.classList.add('hidden');
+        }
+
+        function processFile(file) {
+            hideError();
+            loadingIndicator.classList.remove('hidden');
+            
+            Papa.parse(file, {
+                header: true,
+                complete: (results) => {
+                    const rows = results.data;
+                    
+                    if (rows.length === 0) {
+                        alert('Arquivo CSV vazio!');
+                        loadingIndicator.classList.add('hidden');
+                        return;
+                    }
+
+                    const firstRow = rows[0];
+                    
+                    // Obter valores personalizados dos campos
+                    const customCounty = document.getElementById('customCounty').value.trim();
+                    const customDate = document.getElementById('customDate').value.trim();
+                    
+                    // Usar valores personalizados se fornecidos, senão usar do CSV
+                    let county = customCounty || firstRow.County || '';
+                    let ddmm = '';
+                    
+                    if (customDate && customDate.length === 4) {
+                        // Validar formato DDMM
+                        const dd = parseInt(customDate.substring(0, 2));
+                        const mm = parseInt(customDate.substring(2, 4));
+                        if (dd >= 1 && dd <= 31 && mm >= 1 && mm <= 12) {
+                            ddmm = customDate;
+                        } else {
+                            showError('❌ Data inválida! Use o formato DDMM (ex: 2011 para 20 de novembro)');
+                            return;
+                        }
+                    } else if (!customDate) {
+                        // Usar data do CSV se não houver data personalizada
+                        const auctionDate = firstRow['Next Auction'] || '';
+                        if (auctionDate) {
+                            const [month, day, year] = auctionDate.split('/');
+                            ddmm = `${day.padStart(2, '0')}${month.padStart(2, '0')}`;
+                        }
+                    }
+                    
+                    const layerName = `${county} ${ddmm}`;
+
+                    const properties = rows
+                        .filter(row => row.Coordinates && row.Coordinates.includes(','))
+                        .map(row => {
+                            const coords = row.Coordinates.replace(/"/g, '').trim();
+                            const [lat, lon] = coords.split(',');
+                            
+                            return {
+                                'Name': row.Name || '',
+                                'Parcel ID': row['Parcel Number'] || '',
+                                'Address': row.Address || '',
+                                'City': row.City || '',
+                                'State': row.State || '',
+                                'Zip': row.Zip || '',
+                                'County': row.County || '',
+                                'Acres': row.Acres || '',
+                                'Amount Due': row['Amount Due'] || '',
+                                'Latitude': lat.trim(),
+                                'Longitude': lon.trim(),
+                                'Coordinates': coords,
+                                'Parcel Fair Report': row['Parcel Fair Report'] || '',
+                                'Next Auction': row['Next Auction'] || '',
+                            };
+                        });
+
+                    // Verificar se precisa dividir
+                    const needsSplit = checkIfNeedsSplit(properties);
+                    
+                    if (needsSplit) {
+                        const splitFiles = splitIntoMultipleFiles(properties, county, ddmm, layerName);
+                        processedData = {
+                            properties,
+                            county,
+                            auctionDate,
+                            layerName,
+                            totalProperties: properties.length,
+                            splitFiles: splitFiles,
+                            isSplit: true
+                        };
+                    } else {
+                        processedData = {
+                            properties,
+                            county,
+                            auctionDate,
+                            layerName,
+                            totalProperties: properties.length,
+                            isSplit: false
+                        };
+                    }
+
+                    displayResults();
+                    loadingIndicator.classList.add('hidden');
+                },
+                error: (error) => {
+                    console.error('Erro ao processar CSV:', error);
+                    showError('❌ Erro ao processar arquivo CSV! Verifique se o formato está correto.');
+                }
+            });
+        }
+
+        function checkIfNeedsSplit(properties) {
+            const csv = Papa.unparse(properties);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const maxSize = 5 * 1024 * 1024; // 5 MB
+            return blob.size > maxSize;
+        }
+
+        function splitIntoMultipleFiles(properties, county, ddmm, layerName) {
+            const files = [];
+            const maxSize = 4.5 * 1024 * 1024; // 4.5 MB para margem de segurança
+            
+            let currentChunk = [];
+            let partNumber = 1;
+            
+            for (let i = 0; i < properties.length; i++) {
+                currentChunk.push(properties[i]);
+                
+                // Verificar tamanho do chunk atual
+                const csv = Papa.unparse(currentChunk);
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                
+                // Se exceder o tamanho ou for a última propriedade
+                if (blob.size > maxSize || i === properties.length - 1) {
+                    // Se excedeu, remover última propriedade e salvar chunk
+                    if (blob.size > maxSize && currentChunk.length > 1) {
+                        currentChunk.pop();
+                        i--; // Processar esta propriedade novamente no próximo chunk
+                    }
+                    
+                    const finalCsv = Papa.unparse(currentChunk);
+                    const fileName = `${county}_${ddmm}_Parte${partNumber}_coordinates.csv`;
+                    
+                    files.push({
+                        name: fileName,
+                        data: currentChunk,
+                        csv: finalCsv,
+                        count: currentChunk.length,
+                        partNumber: partNumber
+                    });
+                    
+                    currentChunk = [];
+                    partNumber++;
+                }
+            }
+            
+            return files;
+        }
+
+        function displayResults() {
+            uploadSection.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+
+            document.getElementById('countyName').textContent = processedData.county;
+            document.getElementById('auctionDate').textContent = processedData.auctionDate;
+            document.getElementById('layerName').textContent = processedData.layerName;
+            document.getElementById('totalProperties').textContent = processedData.totalProperties;
+
+            // Mostrar aviso e lista de arquivos se foi dividido
+            if (processedData.isSplit) {
+                document.getElementById('splitWarning').classList.remove('hidden');
+                document.getElementById('splitCount').textContent = processedData.splitFiles.length;
+                document.getElementById('downloadBtn').classList.add('hidden');
+                document.getElementById('downloadAllBtn').classList.remove('hidden');
+                
+                // Mostrar lista de arquivos
+                const filesList = document.getElementById('filesList');
+                const filesListContent = document.getElementById('filesListContent');
+                filesList.classList.remove('hidden');
+                filesListContent.innerHTML = '';
+                
+                processedData.splitFiles.forEach((file, index) => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'flex items-center justify-between p-3 bg-gray-50 rounded border';
+                    fileItem.innerHTML = `
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <div>
+                                <p class="font-medium text-gray-800">${file.name}</p>
+                                <p class="text-xs text-gray-500">${file.count} propriedades</p>
+                            </div>
+                        </div>
+                        <button onclick="downloadSingleFile(${index})" class="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600">
+                            Baixar
+                        </button>
+                    `;
+                    filesListContent.appendChild(fileItem);
+                });
+            } else {
+                document.getElementById('splitWarning').classList.add('hidden');
+                document.getElementById('filesList').classList.add('hidden');
+                document.getElementById('downloadBtn').classList.remove('hidden');
+                document.getElementById('downloadAllBtn').classList.add('hidden');
+            }
+
+            // Initialize map
+            if (!map) {
+                const firstProperty = processedData.properties[0];
+                const center = [parseFloat(firstProperty.Latitude), parseFloat(firstProperty.Longitude)];
+                
+                map = L.map('map').setView(center, 10);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+
+                processedData.properties.forEach(property => {
+                    L.marker([parseFloat(property.Latitude), parseFloat(property.Longitude)])
+                        .addTo(map)
+                        .bindPopup(`
+                            <strong>${property.Name}</strong><br>
+                            Parcel ID: ${property['Parcel ID']}<br>
+                            ${property.Address}<br>
+                            ${property.City}, ${property.State}<br>
+                            <strong>${property.Acres} acres</strong>
+                        `);
+                });
+            }
+
+            // Populate table
+            const tableBody = document.getElementById('propertiesTable');
+            tableBody.innerHTML = '';
+            
+            const displayLimit = 50;
+            processedData.properties.slice(0, displayLimit).forEach(property => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-4 py-3 text-sm">${property['Parcel ID']}</td>
+                    <td class="px-4 py-3 text-sm">${property.Name}</td>
+                    <td class="px-4 py-3 text-sm">${property.Address}</td>
+                    <td class="px-4 py-3 text-sm">${property.City}</td>
+                    <td class="px-4 py-3 text-sm">${property.Acres}</td>
+                    <td class="px-4 py-3 text-sm">${property['Amount Due']}</td>
+                    <td class="px-4 py-3 text-sm text-gray-500">${property.Latitude}, ${property.Longitude}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            if (processedData.totalProperties > displayLimit) {
+                const footer = document.getElementById('tableFooter');
+                footer.textContent = `Mostrando ${displayLimit} de ${processedData.totalProperties} propriedades`;
+                footer.classList.remove('hidden');
+            }
+        }
+
+        function downloadSingleFile(index) {
+            const file = processedData.splitFiles[index];
+            const blob = new Blob([file.csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', file.name);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const csv = Papa.unparse(processedData.properties);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            const fileName = `${processedData.county}_${processedData.layerName.split(' ')[1]}_coordinates.csv`;
+            link.setAttribute('href', url);
+            link.setAttribute('download', fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        document.getElementById('downloadAllBtn').addEventListener('click', async () => {
+            const zip = new JSZip();
+            
+            // Adicionar todos os arquivos ao ZIP
+            processedData.splitFiles.forEach(file => {
+                zip.file(file.name, file.csv);
+            });
+            
+            // Gerar e baixar o ZIP
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(zipBlob);
+            
+            const zipFileName = `${processedData.county}_${processedData.layerName.split(' ')[1]}_AllFiles.zip`;
+            link.setAttribute('href', url);
+            link.setAttribute('download', zipFileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            processedData = null;
+            if (map) {
+                map.remove();
+                map = null;
+            }
+            resultsSection.classList.add('hidden');
+            uploadSection.classList.remove('hidden');
+            fileInput.value = '';
+            document.getElementById('customCounty').value = '';
+            document.getElementById('customDate').value = '';
+            document.getElementById('previewName').classList.add('hidden');
+        });
+
+        // Preview dinâmico do nome do arquivo
+        function updatePreview() {
+            const county = document.getElementById('customCounty').value.trim();
+            const date = document.getElementById('customDate').value.trim();
+            const previewDiv = document.getElementById('previewName');
+            const previewText = document.getElementById('previewText');
+            
+            if (county && date && date.length === 4) {
+                const fileName = `${county}_${date}_coordinates.csv`;
+                previewText.textContent = fileName;
+                previewDiv.classList.remove('hidden');
+            } else if (county || date) {
+                previewDiv.classList.remove('hidden');
+                if (!county) {
+                    previewText.textContent = '[Condado do CSV]_' + (date || '[Data do CSV]') + '_coordinates.csv';
+                } else if (!date) {
+                    previewText.textContent = county + '_[Data do CSV]_coordinates.csv';
+                } else {
+                    previewText.textContent = county + '_' + date + '_coordinates.csv';
+                }
+            } else {
+                previewDiv.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('customCounty').addEventListener('input', updatePreview);
+        document.getElementById('customDate').addEventListener('input', (e) => {
+            // Permitir apenas números
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+            updatePreview();
+        });
+    </script>
+</body>
+</html>
+

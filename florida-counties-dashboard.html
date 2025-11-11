@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Florida Counties Resources Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .resource-card {
+            transition: all 0.3s ease;
+        }
+        .resource-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .resource-btn {
+            transition: all 0.2s ease;
+        }
+        .resource-btn:hover {
+            transform: scale(1.05);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 fade-in">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-4xl font-bold text-gray-800 mb-2">🏛️ Florida Counties Resources</h1>
+                    <p class="text-gray-600">Access official county resources and information</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-3xl font-bold text-blue-600" id="countyCount">67</div>
+                    <div class="text-sm text-gray-500">Counties</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 mb-8 fade-in">
+            <div class="relative">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="🔍 Search county name..." 
+                    class="w-full px-6 py-4 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors"
+                />
+                <div class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <span id="resultCount" class="text-sm">67 results</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Counties Grid -->
+        <div id="countiesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Counties will be loaded here -->
+        </div>
+
+        <!-- No Results -->
+        <div id="noResults" class="hidden text-center py-12">
+            <div class="text-6xl mb-4">🔍</div>
+            <h3 class="text-2xl font-bold text-gray-700 mb-2">No counties found</h3>
+            <p class="text-gray-500">Try a different search term</p>
+        </div>
+    </div>
+
+    <script>
+        const countiesData = [{"CONDADOS": "MIAMI-DADE", "APPRAISAL": "https://www.miamidade.gov/Apps/PA/propertysearch/#/", "GIS": "https://gisweb.miamidade.gov/landinformation/", "CLERKS OFFICE": "https://onlineservices.miamidadeclerk.gov/officialrecords/StandardSearch.aspx", "CONDADO": "https://www.miamidade.gov/", "COD ENFORCEMENT": "https://www.miamidade.gov/global/service.page?Mduid_service=ser1489075928620972", "PLANNING AND ZONING": "https://www.miamidade.gov/zoning/"}, {"CONDADOS": "BROWARD", "APPRAISAL": "https://web.bcpa.net/BcpaClient/#/", "GIS": "https://gis.broward.org/gismap/", "CLERKS OFFICE": "https://officialrecords.broward.org/AcclaimWeb/search/SearchTypeName", "CONDADO": "https://www.broward.org/", "COD ENFORCEMENT": "https://www.broward.org/CodeAppeals/Pages/Default.aspx", "PLANNING AND ZONING": "https://www.broward.org/Planning/Zoning/Pages/default.aspx"}, {"CONDADOS": "ORANGE", "APPRAISAL": "https://www.ocpafl.org/searches/ParcelSearch.aspx", "GIS": "https://ocpagis.ocpafl.org/", "CLERKS OFFICE": "https://www.myorangeclerk.com/", "CONDADO": "https://www.orangefl.gov/", "COD ENFORCEMENT": "https://www.orangefl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.orangecountyfl.net/PermitsLicenses/ZoningDivision.aspx"}, {"CONDADOS": "HILLSBOROUGH", "APPRAISAL": "https://www.hcpafl.org/PropertySearch", "GIS": "https://www.hcpafl.org/GIS", "CLERKS OFFICE": "https://www.hillsboroughclerkofcourt.org/", "CONDADO": "https://www.hillsboroughfl.gov/", "COD ENFORCEMENT": "https://www.hillsboroughfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.hillsboroughcounty.org/en/residents/property-owners-and-renters/zoning"}, {"CONDADOS": "PINELLAS", "APPRAISAL": "https://www.pcpao.org/", "GIS": "https://www.pcpao.org/apps/property-search/", "CLERKS OFFICE": "https://www.pinellasclerkofcourt.org/", "CONDADO": "https://www.pinellasfl.gov/", "COD ENFORCEMENT": "https://www.pinellasfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.pinellas.gov/department/planning/"}, {"CONDADOS": "COLLIER", "APPRAISAL": "https://www.collierappraiser.com/", "GIS": "https://www.collierappraiser.com/", "CLERKS OFFICE": "https://www.collierclerkofcourt.org/", "CONDADO": "https://www.collierfl.gov/", "COD ENFORCEMENT": "https://www.collierfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.colliercountyfl.gov/your-government/divisions-f-r/growth-management-department/planning-and-zoning"}, {"CONDADOS": "LEE", "APPRAISAL": "https://www.leepa.org/", "GIS": "https://www.leepa.org/", "CLERKS OFFICE": "https://www.leeclerkofcourt.org/", "CONDADO": "https://www.leefl.gov/", "COD ENFORCEMENT": "https://www.leefl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.leegov.com/dcd/Planning"}, {"CONDADOS": "OSCEOLA", "APPRAISAL": "https://www.property-appraiser.org/", "GIS": "https://www.property-appraiser.org/", "CLERKS OFFICE": "https://www.osceolaclerkofcourt.org/", "CONDADO": "https://www.osceolafl.gov/", "COD ENFORCEMENT": "https://www.osceolafl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.osceola.org/agencies-departments/community-development/planning-zoning/"}, {"CONDADOS": "SARASOTA", "APPRAISAL": "https://www.sc-pa.com/", "GIS": "https://www.sc-pa.com/", "CLERKS OFFICE": "https://www.sarasotaclerkofcourt.org/", "CONDADO": "https://www.sarasotafl.gov/", "COD ENFORCEMENT": "https://www.sarasotafl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.scgov.net/government/planning-and-development-services/planning-and-development-services"}, {"CONDADOS": "MARTIN", "APPRAISAL": "https://www.pa.martin.fl.us/", "GIS": "https://geoweb.martin.fl.us/general/", "CLERKS OFFICE": "https://www.martinclerkofcourt.org/", "CONDADO": "https://www.martinfl.gov/", "COD ENFORCEMENT": "https://www.martinfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.martinfl.gov/planning-zoning"}, {"CONDADOS": "PALM BEACH", "APPRAISAL": "https://www.pbcgov.org/papa/Asps/PropertySearch/PropertySearch.aspx", "GIS": "https://www.pbcgov.org/papa/", "CLERKS OFFICE": "https://www.palmbeachclerkofcourt.org/", "CONDADO": "https://www.palmbeachfl.gov/", "COD ENFORCEMENT": "https://www.palmbeachfl.gov/code-enforcement", "PLANNING AND ZONING": "https://discover.pbc.gov/pzb/Zoning/Pages/default.aspx"}, {"CONDADOS": "POLK", "APPRAISAL": "https://www.polkpa.org/", "GIS": "https://www.polkpa.org/", "CLERKS OFFICE": "https://polk.county-taxes.com/public/real_estate/parcels", "CONDADO": "https://www.polk.county-fl.net/", "COD ENFORCEMENT": "https://www.polk.county-fl.net/departments/code-enforcement", "PLANNING AND ZONING": "https://www.polk.county-fl.net/departments/planning-development"}, {"CONDADOS": "MANATEE", "APPRAISAL": "https://www.manateepao.com/", "GIS": "https://www.manateepao.com/", "CLERKS OFFICE": "https://www.manateeclerkofcourt.org/", "CONDADO": "https://www.manateefl.gov/", "COD ENFORCEMENT": "https://www.manateefl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.mymanatee.org/departments/planning_development"}, {"CONDADOS": "SEMINOLE", "APPRAISAL": "https://www.scpafl.org/", "GIS": "https://www.scpafl.org/", "CLERKS OFFICE": "https://www.seminoleclerkofcourt.org/", "CONDADO": "https://www.seminolefl.gov/", "COD ENFORCEMENT": "https://www.seminolefl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.seminolecountyfl.gov/departments-services/county-managers-office/planning-development/"}, {"CONDADOS": "VOLUSIA", "APPRAISAL": "https://www.vcpa.vcgov.org/", "GIS": "https://www.vcpa.vcgov.org/", "CLERKS OFFICE": "https://www.volusiaclerkofcourt.org/", "CONDADO": "https://www.volusiafl.gov/", "COD ENFORCEMENT": "https://www.volusiafl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.volusia.org/services/growth-and-resource-management/planning-and-development/"}, {"CONDADOS": "HENDRY", "APPRAISAL": "https://www.hendrypa.net/", "GIS": "https://www.hendrypa.net/", "CLERKS OFFICE": "https://www.hendryclerkofcourt.org/", "CONDADO": "https://www.hendryfl.gov/", "COD ENFORCEMENT": "https://www.hendryfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.hendryfl.gov/planning-zoning"}, {"CONDADOS": "BREVARD", "APPRAISAL": "https://www.bcpao.us/PropertySearch/#/", "GIS": "https://www.bcpao.us/", "CLERKS OFFICE": "https://www.brevardclerkofcourt.org/", "CONDADO": "https://www.brevardfl.gov/", "COD ENFORCEMENT": "https://www.brevardfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.brevardfl.gov/PlanningAndDevelopment/Home"}, {"CONDADOS": "CHARLOTTE", "APPRAISAL": "https://www.ccappraiser.com/", "GIS": "https://www.ccappraiser.com/", "CLERKS OFFICE": "https://www.charlotteclerkofcourt.org/", "CONDADO": "https://www.charlottefl.gov/", "COD ENFORCEMENT": "https://www.charlottefl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.charlottecountyfl.gov/departments/community-development/planning-zoning.stml"}, {"CONDADOS": "LAKE", "APPRAISAL": "https://www.lakecopropappr.com/", "GIS": "https://www.lakecopropappr.com/", "CLERKS OFFICE": "https://www.lakeclerkofcourt.org/", "CONDADO": "https://www.lakefl.gov/", "COD ENFORCEMENT": "https://www.lakefl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.lakecountyfl.gov/departments/growth_management/planning_and_zoning/"}, {"CONDADOS": "PASCO", "APPRAISAL": "https://www.pascopa.com/", "GIS": "https://www.pascopa.com/", "CLERKS OFFICE": "https://www.pascoclerkofcourt.org/", "CONDADO": "https://www.pascofl.gov/", "COD ENFORCEMENT": "https://www.pascofl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.pascocountyfl.net/1404/Planning-Zoning"}, {"CONDADOS": "MARION", "APPRAISAL": "https://www.pa.marion.fl.us/", "GIS": "https://www.pa.marion.fl.us/", "CLERKS OFFICE": "https://www.marionclerkofcourt.org/", "CONDADO": "https://www.marionfl.gov/", "COD ENFORCEMENT": "https://www.marionfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.marionfl.org/agencies-departments/departments-facilities-offices/growth-services/planning-zoning"}, {"CONDADOS": "INDIAN RIVER", "APPRAISAL": "https://www.ircpa.org/", "GIS": "https://www.ircpa.org/", "CLERKS OFFICE": "https://www.indianriverclerkofcourt.org/", "CONDADO": "https://www.indianriverfl.gov/", "COD ENFORCEMENT": "https://www.indianriverfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.ircgov.com/Departments/Community-Development/Planning-Zoning.htm"}, {"CONDADOS": "ALACHUA", "APPRAISAL": "https://www.acpafl.org/", "GIS": "https://www.acpafl.org/", "CLERKS OFFICE": "https://www.alachuaclerkofcourt.org/", "CONDADO": "https://www.alachuafl.gov/", "COD ENFORCEMENT": "https://www.alachuafl.gov/code-enforcement", "PLANNING AND ZONING": "https://growth-management.alachuacounty.us/Planning"}, {"CONDADOS": "HIGHLANDS", "APPRAISAL": "https://www.hcpao.org/", "GIS": "https://www.hcpao.org/", "CLERKS OFFICE": "https://www.highlandsclerkofcourt.org/", "CONDADO": "https://www.highlandsfl.gov/", "COD ENFORCEMENT": "https://www.highlandsfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.highlandsfl.gov/planning-zoning"}, {"CONDADOS": "ST. LUCIE", "APPRAISAL": "https://www.paslc.gov/", "GIS": "https://www.paslc.gov/", "CLERKS OFFICE": "https://www.stlucieclerkofcourt.org/", "CONDADO": "https://www.stluciefl.gov/", "COD ENFORCEMENT": "https://www.stluciefl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.stlucieco.gov/departments-services/a-z/community-development/planning-zoning"}, {"CONDADOS": "FLAGLER", "APPRAISAL": "https://www.flaglerpa.com/", "GIS": "https://www.flaglerpa.com/", "CLERKS OFFICE": "https://www.flaglerclerkofcourt.org/", "CONDADO": "https://www.flaglerfl.gov/", "COD ENFORCEMENT": "https://www.flaglerfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.flaglercounty.gov/Growth-Building/Planning-and-Zoning"}, {"CONDADOS": "JEFFERSON", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1029", "GIS": "https://gis.jeffersonfl.gov/", "CLERKS OFFICE": "https://www.jeffersonclerkofcourt.org/", "CONDADO": "https://www.jeffersonfl.gov/", "COD ENFORCEMENT": "https://www.jeffersonfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.jeffersonfl.gov/planning-zoning"}, {"CONDADOS": "WAKULLA", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1037", "GIS": "https://gis.wakullafl.gov/", "CLERKS OFFICE": "https://www.wakullaclerkofcourt.org/", "CONDADO": "https://www.wakullafl.gov/", "COD ENFORCEMENT": "https://www.wakullafl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.wakullafl.gov/planning-zoning"}, {"CONDADOS": "LEON", "APPRAISAL": "https://www.leonpa.org/", "GIS": "https://www.leonpa.org/", "CLERKS OFFICE": "https://www.leonclerkofcourt.org/", "CONDADO": "https://www.leonfl.gov/", "COD ENFORCEMENT": "https://www.leonfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.leonpa.org/"}, {"CONDADOS": "CITRUS", "APPRAISAL": "https://www.pa.citrus.fl.us/", "GIS": "https://gis.citrusbocc.com/address-lookup.html", "CLERKS OFFICE": "https://www.citrusclerkofcourt.org/", "CONDADO": "https://www.citrusfl.gov/", "COD ENFORCEMENT": "https://www.citrusfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.citrusbocc.com/departments/community_development/planning_and_development.php"}, {"CONDADOS": "ST. JOHNS", "APPRAISAL": "https://www.sjcpa.us/", "GIS": "https://www.sjcpa.us/", "CLERKS OFFICE": "https://www.stjohnsclerkofcourt.org/", "CONDADO": "https://www.stjohnsfl.gov/", "COD ENFORCEMENT": "https://www.stjohnsfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.sjcfl.us/GMS/PlanningZoning/"}, {"CONDADOS": "HERNANDO", "APPRAISAL": "https://www.hernandocounty.us/departments/departments-a-c/county-appraiser", "GIS": "https://www.hernandocounty.us/departments/departments-a-c/county-appraiser", "CLERKS OFFICE": "https://www.hernandoclerkofcourt.org/", "CONDADO": "https://www.hernandofl.gov/", "COD ENFORCEMENT": "https://www.hernandofl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.hernandocounty.us/departments/departments-n-z/planning"}, {"CONDADOS": "SUMTER", "APPRAISAL": "https://www.sumterpa.com/", "GIS": "https://www.sumterpa.com/", "CLERKS OFFICE": "https://www.sumterclerkofcourt.org/", "CONDADO": "https://www.sumterfl.gov/", "COD ENFORCEMENT": "https://www.sumterfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.sumtercountyfl.gov/169/Planning-Zoning"}, {"CONDADOS": "GULF", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1024", "GIS": "https://gis.gulffl.gov/", "CLERKS OFFICE": "https://www.gulfclerkofcourt.org/", "CONDADO": "https://www.gulffl.gov/", "COD ENFORCEMENT": "https://www.gulffl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.gulffl.gov/planning-zoning"}, {"CONDADOS": "TAYLOR", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1035", "GIS": "https://gis.taylorfl.gov/", "CLERKS OFFICE": "https://www.taylorclerkofcourt.org/", "CONDADO": "https://www.taylorfl.gov/", "COD ENFORCEMENT": "https://www.taylorfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.taylorfl.gov/planning-zoning"}, {"CONDADOS": "MADISON", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1033", "GIS": "https://gis.madisonfl.gov/", "CLERKS OFFICE": "https://www.madisonclerkofcourt.org/", "CONDADO": "https://www.madisonfl.gov/", "COD ENFORCEMENT": "https://www.madisonfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.madisonfl.gov/planning-zoning"}, {"CONDADOS": "HAMILTON", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1025", "GIS": "https://gis.hamiltonfl.gov/", "CLERKS OFFICE": "https://www.hamiltonclerkofcourt.org/", "CONDADO": "https://www.hamiltonfl.gov/", "COD ENFORCEMENT": "https://www.hamiltonfl.gov/code-enforcement", "PLANNING AND ZONING": "https://hamiltoncountyfl.com/planning-land-use-and-zoning/"}, {"CONDADOS": "LIBERTY", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1032", "GIS": "https://gis.libertyfl.gov/", "CLERKS OFFICE": "https://www.libertyclerkofcourt.org/", "CONDADO": "https://www.libertyfl.gov/", "COD ENFORCEMENT": "https://www.libertyfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.libertyfl.gov/planning-zoning"}, {"CONDADOS": "GADSDEN", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1021", "GIS": "https://gis.gadsdenfl.gov/", "CLERKS OFFICE": "https://www.gadsdenclerkofcourt.org/", "CONDADO": "https://www.gadsdenfl.gov/", "COD ENFORCEMENT": "https://www.gadsdenfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.gadsdenfl.gov/planning-zoning"}, {"CONDADOS": "BRADFORD", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1014", "GIS": "https://gis.bradfordfl.gov/", "CLERKS OFFICE": "https://www.bradfordclerkofcourt.org/", "CONDADO": "https://www.bradfordfl.gov/", "COD ENFORCEMENT": "https://www.bradfordfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.bradfordfl.gov/planning-zoning"}, {"CONDADOS": "HOLMES", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1027", "GIS": "https://gis.holmesfl.gov/", "CLERKS OFFICE": "https://www.holmesclerkofcourt.org/", "CONDADO": "https://www.holmesfl.gov/", "COD ENFORCEMENT": "https://www.holmesfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.holmesfl.gov/planning-zoning"}, {"CONDADOS": "WASHINGTON", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1039", "GIS": "https://gis.washingtonfl.gov/", "CLERKS OFFICE": "https://www.washingtonclerkofcourt.org/", "CONDADO": "https://www.washingtonfl.gov/", "COD ENFORCEMENT": "https://www.washingtonfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.washingtonfl.gov/planning-zoning"}, {"CONDADOS": "FRANKLIN", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1020", "GIS": "https://gis.franklinfl.gov/", "CLERKS OFFICE": "https://www.franklinclerkofcourt.org/", "CONDADO": "https://www.franklinfl.gov/", "COD ENFORCEMENT": "https://www.franklinfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.franklinfl.gov/planning-zoning"}, {"CONDADOS": "GLADES", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1023", "GIS": "https://gis.gladesfl.gov/", "CLERKS OFFICE": "https://www.gladesclerkofcourt.org/", "CONDADO": "https://www.gladesfl.gov/", "COD ENFORCEMENT": "https://www.gladesfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.gladesfl.gov/planning-zoning"}, {"CONDADOS": "DESOTO", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1018", "GIS": "https://gis.desotofl.gov/", "CLERKS OFFICE": "https://www.desotoclerkofcourt.org/", "CONDADO": "https://www.desotofl.gov/", "COD ENFORCEMENT": "https://www.desotofl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.desotofl.gov/planning-zoning"}, {"CONDADOS": "SUWANNEE", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1034", "GIS": "https://gis.suwanneefl.gov/", "CLERKS OFFICE": "https://www.suwanneeclerkofcourt.org/", "CONDADO": "https://www.suwanneefl.gov/", "COD ENFORCEMENT": "https://www.suwanneefl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.suwanneefl.gov/planning-zoning"}, {"CONDADOS": "COLUMBIA", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1017", "GIS": "https://gis.columbiafl.gov/", "CLERKS OFFICE": "https://www.columbiaclerkofcourt.org/", "CONDADO": "https://www.columbiafl.gov/", "COD ENFORCEMENT": "https://www.columbiafl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.columbiafl.gov/planning-zoning"}, {"CONDADOS": "GILCHRIST", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1022", "GIS": "https://gis.gilchristfl.gov/", "CLERKS OFFICE": "https://www.gilchristclerkofcourt.org/", "CONDADO": "https://www.gilchristfl.gov/", "COD ENFORCEMENT": "https://www.gilchristfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.gilchristfl.gov/planning-zoning"}, {"CONDADOS": "JACKSON", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1028", "GIS": "https://gis.jacksonfl.gov/", "CLERKS OFFICE": "https://www.jacksonclerkofcourt.org/", "CONDADO": "https://www.jacksonfl.gov/", "COD ENFORCEMENT": "https://www.jacksonfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.jacksonfl.gov/planning-zoning"}, {"CONDADOS": "BAKER", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1013", "GIS": "https://gis.bakerfl.gov/", "CLERKS OFFICE": "https://www.bakerclerkofcourt.org/", "CONDADO": "https://www.bakerfl.gov/", "COD ENFORCEMENT": "https://www.bakerfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.bakerfl.gov/planning-zoning"}, {"CONDADOS": "BAY", "APPRAISAL": "https://www.qpublic.net/fl/bay/", "GIS": "https://www.qpublic.net/fl/bay/", "CLERKS OFFICE": "https://www.bayclerkofcourt.org/", "CONDADO": "https://www.bayfl.gov/", "COD ENFORCEMENT": "https://www.bayfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.baycountyfl.gov/276/Planning-Zoning"}, {"CONDADOS": "CLAY", "APPRAISAL": "https://www.ccpao.com/", "GIS": "https://www.ccpao.com/", "CLERKS OFFICE": "https://www.clayclerkofcourt.org/", "CONDADO": "https://www.clayfl.gov/", "COD ENFORCEMENT": "https://www.clayfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.claycountygov.com/community/planning-zoning"}, {"CONDADOS": "PUTNAM", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1009", "GIS": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1009", "CLERKS OFFICE": "https://www.putnam-fl.com/departments/clerk_of_courts/", "CONDADO": "https://www.putnam-fl.com/", "COD ENFORCEMENT": "https://www.putnam-fl.com/departments/code_enforcement/", "PLANNING AND ZONING": "https://www.putnam-fl.gov/departments/planning-development/"}, {"CONDADOS": "LAFAYETTE", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1030", "GIS": "https://gis.lafayettefl.gov/", "CLERKS OFFICE": "https://www.lafayetteclerkofcourt.org/", "CONDADO": "https://www.lafayettefl.gov/", "COD ENFORCEMENT": "https://www.lafayettefl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.lafayettefl.gov/planning-zoning"}, {"CONDADOS": "LEVY", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1031", "GIS": "https://gis.levyfl.gov/", "CLERKS OFFICE": "https://www.levyclerkofcourt.org/", "CONDADO": "https://www.levyfl.gov/", "COD ENFORCEMENT": "https://www.levyfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.levyfl.gov/planning-zoning"}, {"CONDADOS": "OKEECHOBEE", "APPRAISAL": "https://www.okeechobeepa.com/", "GIS": "https://www.okeechobeepa.com/", "CLERKS OFFICE": "https://www.okeechobeeclerkofcourt.org/", "CONDADO": "https://www.okeechobeefl.gov/", "COD ENFORCEMENT": "https://www.okeechobeefl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.okeechobeefl.gov/planning-zoning"}, {"CONDADOS": "SANTA ROSA", "APPRAISAL": "https://www.srcpa.org/", "GIS": "https://www.srcpa.org/", "CLERKS OFFICE": "https://www.santarosaclerkofcourt.org/", "CONDADO": "https://www.santarosafl.gov/", "COD ENFORCEMENT": "https://www.santarosafl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.santarosa.fl.gov/1062/Planning-Zoning-GIS"}, {"CONDADOS": "OKALOOSA", "APPRAISAL": "https://www.okaloosapa.com/", "GIS": "https://webgis.myokaloosa.com/", "CLERKS OFFICE": "https://www.okaloosaclerkofcourt.org/", "CONDADO": "https://www.okaloosafl.gov/", "COD ENFORCEMENT": "https://www.okaloosafl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.myokaloosa.com/growth-management/planning"}, {"CONDADOS": "WALTON", "APPRAISAL": "https://www.waltonpa.com/", "GIS": "https://www.waltonpa.com/", "CLERKS OFFICE": "https://www.waltonclerkofcourt.org/", "CONDADO": "https://www.waltonfl.gov/", "COD ENFORCEMENT": "https://www.waltonfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.co.walton.fl.us/161/Planning-Development-Services"}, {"CONDADOS": "UNION", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1036", "GIS": "https://gis.unionfl.gov/", "CLERKS OFFICE": "https://www.unionclerkofcourt.org/", "CONDADO": "https://www.unionfl.gov/", "COD ENFORCEMENT": "https://www.unionfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.unionfl.gov/planning-zoning"}, {"CONDADOS": "HARDEE", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1026", "GIS": "https://gis.hardeefl.gov/", "CLERKS OFFICE": "https://www.hardeeclerkofcourt.org/", "CONDADO": "https://www.hardeefl.gov/", "COD ENFORCEMENT": "https://www.hardeefl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.hardeefl.gov/planning-zoning"}, {"CONDADOS": "DIXIE", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1019", "GIS": "https://gis.dixiefl.gov/", "CLERKS OFFICE": "https://www.dixieclerkofcourt.org/", "CONDADO": "https://www.dixiefl.gov/", "COD ENFORCEMENT": "https://www.dixiefl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.dixiefl.gov/planning-zoning"}, {"CONDADOS": "CALHOUN", "APPRAISAL": "https://qpublic.schneidercorp.com/Application.aspx?AppID=1015", "GIS": "https://gis.calhounfl.gov/", "CLERKS OFFICE": "https://www.calhounclerkofcourt.org/", "CONDADO": "https://www.calhounfl.gov/", "COD ENFORCEMENT": "https://www.calhounfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.calhounfl.gov/planning-zoning"}, {"CONDADOS": "DUVAL", "APPRAISAL": "https://paopropertysearch.coj.net/", "GIS": "https://paopropertysearch.coj.net/", "CLERKS OFFICE": "https://www.duvalclerkofcourt.org/", "CONDADO": "https://www.duvalfl.gov/", "COD ENFORCEMENT": "https://www.duvalfl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.coj.net/departments/planning-and-development"}, {"CONDADOS": "ESCAMBIA", "APPRAISAL": "https://www.escpa.org/", "GIS": "https://www.escpa.org/", "CLERKS OFFICE": "https://www.escambiaclerkofcourt.org/", "CONDADO": "https://www.escambiafl.gov/", "COD ENFORCEMENT": "https://www.escambiafl.gov/code-enforcement", "PLANNING AND ZONING": "https://myescambia.com/our-services/building-services/planning-and-zoning"}, {"CONDADOS": "MONROE", "APPRAISAL": "https://www.mcpafl.org/", "GIS": "https://www.mcpafl.org/", "CLERKS OFFICE": "https://www.monroeclerkofcourt.org/", "CONDADO": "https://www.monroefl.gov/", "COD ENFORCEMENT": "https://www.monroefl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.monroefl.gov/planning-zoning"}, {"CONDADOS": "NASSAU", "APPRAISAL": "https://www.nassauflpa.com/", "GIS": "https://www.nassauflpa.com/", "CLERKS OFFICE": "https://www.nassauclerkofcourt.org/", "CONDADO": "https://www.nassaufl.gov/", "COD ENFORCEMENT": "https://www.nassaufl.gov/code-enforcement", "PLANNING AND ZONING": "https://www.nassauflpa.com/"}];
+
+        // Render counties
+        function renderCounties(counties) {
+            const grid = document.getElementById('countiesGrid');
+            const noResults = document.getElementById('noResults');
+            
+            if (counties.length === 0) {
+                grid.innerHTML = '';
+                noResults.classList.remove('hidden');
+                document.getElementById('resultCount').textContent = '0 results';
+                return;
+            }
+
+            noResults.classList.add('hidden');
+            document.getElementById('resultCount').textContent = `${counties.length} results`;
+
+            grid.innerHTML = counties.map((county, index) => `
+                <div class="resource-card bg-white rounded-xl shadow-lg p-6 fade-in" style="animation-delay: ${index * 0.05}s">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                        <span class="text-3xl mr-3">📍</span>
+                        ${county.CONDADOS}
+                    </h2>
+                    
+                    <div class="space-y-3">
+                        ${createResourceButton('🏠', 'Property Appraiser', county.APPRAISAL, 'blue')}
+                        ${createResourceButton('🗺️', 'GIS Parcel Viewer', county.GIS, 'green')}
+                        ${createResourceButton('📋', 'Clerk\'s Office', county['CLERKS OFFICE'], 'purple')}
+                        ${createResourceButton('🏛️', 'County Website', county.CONDADO, 'indigo')}
+                        ${createResourceButton('⚠️', 'Code Enforcement', county['COD ENFORCEMENT'], 'red')}
+                        ${createResourceButton('📐', 'Planning & Zoning', county['PLANNING AND ZONING'], 'yellow')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Create resource button
+        function createResourceButton(icon, label, url, color) {
+            if (!url || url.trim() === '') {
+                return `
+                    <button disabled class="resource-btn w-full px-4 py-3 bg-gray-100 text-gray-400 rounded-lg text-left flex items-center cursor-not-allowed">
+                        <span class="text-xl mr-3">${icon}</span>
+                        <span class="flex-1 font-medium">${label}</span>
+                        <span class="text-xs">N/A</span>
+                    </button>
+                `;
+            }
+
+            const colorClasses = {
+                blue: 'bg-blue-500 hover:bg-blue-600',
+                green: 'bg-green-500 hover:bg-green-600',
+                purple: 'bg-purple-500 hover:bg-purple-600',
+                indigo: 'bg-indigo-500 hover:bg-indigo-600',
+                red: 'bg-red-500 hover:bg-red-600',
+                yellow: 'bg-yellow-500 hover:bg-yellow-600'
+            };
+
+            return `
+                <button onclick="window.open('${url}', '_blank')" 
+                        class="resource-btn w-full px-4 py-3 ${colorClasses[color]} text-white rounded-lg text-left flex items-center hover:shadow-lg">
+                    <span class="text-xl mr-3">${icon}</span>
+                    <span class="flex-1 font-medium">${label}</span>
+                    <span class="text-xs">→</span>
+                </button>
+            `;
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            
+            if (searchTerm === '') {
+                renderCounties(countiesData);
+                return;
+            }
+
+            const filtered = countiesData.filter(county => 
+                county.CONDADOS.toLowerCase().includes(searchTerm)
+            );
+            
+            renderCounties(filtered);
+        });
+
+        // Load data on page load
+        renderCounties(countiesData);
+        console.log(`✅ Loaded ${countiesData.length} counties`);
+    </script>
+</body>
+</html>

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Testador Google Maps API</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .api-key-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .api-key-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .test-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .test-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .test-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .status.loading {
+            background: #ffc107;
+            color: white;
+        }
+
+        .status.success {
+            background: #4caf50;
+            color: white;
+        }
+
+        .status.error {
+            background: #f44336;
+            color: white;
+        }
+
+        .test-content {
+            min-height: 200px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .test-content img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .error-message {
+            padding: 15px;
+            background: #ffebee;
+            color: #c62828;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .success-message {
+            padding: 15px;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        .info-box h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            color: #555;
+        }
+
+        .info-box li {
+            margin-bottom: 5px;
+        }
+
+        #mapTest {
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .current-key {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Testador Google Maps API</h1>
+            <p>Verifique se sua API key está funcionando corretamente</p>
+        </div>
+
+        <div class="api-key-section">
+            <h2>🔑 Configuração da API Key</h2>
+            <div class="input-group">
+                <input type="text" id="apiKeyInput" placeholder="Cole sua Google Maps API Key aqui..." value="AIzaSyBr4UtMOvkhX6LxYOw89zjBkOYNO-_ykag">
+                <button class="btn btn-primary" onclick="testAPI()">🧪 Testar API</button>
+                <button class="btn btn-secondary" onclick="clearResults()">🗑️ Limpar</button>
+            </div>
+            <div class="current-key" id="currentKey">
+                API Key atual: AIzaSyBr4UtMOvkhX6LxYOw89zjBkOYNO-_ykag
+            </div>
+            <div class="info-box">
+                <h4>📋 APIs que serão testadas:</h4>
+                <ul>
+                    <li><strong>Maps JavaScript API</strong> - Mapa interativo</li>
+                    <li><strong>Street View Static API</strong> - Imagem Street View</li>
+                    <li><strong>Maps Static API</strong> - Imagem Satellite</li>
+                    <li><strong>Geocoding API</strong> - Conversão de endereço</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-results" id="testResults">
+            <!-- Results will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        const testLocation = {
+            address: '123 Main St, Miami, FL 33101',
+            lat: 25.7617,
+            lng: -80.1918
+        };
+
+        function updateCurrentKey() {
+            const apiKey = document.getElementById('apiKeyInput').value;
+            document.getElementById('currentKey').textContent = `API Key atual: ${apiKey}`;
+        }
+
+        document.getElementById('apiKeyInput').addEventListener('input', updateCurrentKey);
+
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '';
+        }
+
+        async function testAPI() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            
+            if (!apiKey) {
+                alert('❌ Por favor, insira uma API Key!');
+                return;
+            }
+
+            updateCurrentKey();
+            clearResults();
+
+            const resultsContainer = document.getElementById('testResults');
+
+            // Test 1: Maps JavaScript API
+            resultsContainer.innerHTML += createTestCard('test1', '🗺️ Maps JavaScript API', 'loading');
+            testMapsJavaScript(apiKey);
+
+            // Test 2: Street View Static API
+            resultsContainer.innerHTML += createTestCard('test2', '📸 Street View Static API', 'loading');
+            testStreetView(apiKey);
+
+            // Test 3: Maps Static API (Satellite)
+            resultsContainer.innerHTML += createTestCard('test3', '🛰️ Maps Static API (Satellite)', 'loading');
+            testStaticMap(apiKey);
+
+            // Test 4: Geocoding API
+            resultsContainer.innerHTML += createTestCard('test4', '📍 Geocoding API', 'loading');
+            testGeocoding(apiKey);
+        }
+
+        function createTestCard(id, title, status) {
+            return `
+                <div class="test-card" id="${id}">
+                    <h3>${title}</h3>
+                    <div class="status ${status}">
+                        ${status === 'loading' ? '<span class="loading-spinner"></span> Testando...' : ''}
+                    </div>
+                    <div class="test-content" id="${id}-content">
+                        <div style="display: flex; align-items: center; justify-content: center; height: 200px; color: #999;">
+                            Aguardando teste...
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateTestCard(id, status, content, message) {
+            const card = document.getElementById(id);
+            const statusEl = card.querySelector('.status');
+            const contentEl = document.getElementById(`${id}-content`);
+
+            statusEl.className = `status ${status}`;
+            statusEl.innerHTML = status === 'success' ? '✅ Funcionando!' : '❌ Erro';
+
+            contentEl.innerHTML = content;
+
+            if (message) {
+                contentEl.innerHTML += status === 'success' 
+                    ? `<div class="success-message">${message}</div>`
+                    : `<div class="error-message">${message}</div>`;
+            }
+        }
+
+        function testMapsJavaScript(apiKey) {
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`;
+            script.async = true;
+            script.defer = true;
+            
+            script.onerror = () => {
+                updateTestCard('test1', 'error', 
+                    '<div style="padding: 20px; text-align: center;">❌ Falha ao carregar</div>',
+                    '<strong>Erro:</strong> Não foi possível carregar a Maps JavaScript API.<br><br><strong>Possíveis causas:</strong><br>• API não está ativada<br>• Restrições de domínio na API key<br>• Faturamento não configurado'
+                );
+            };
+
+            window.initMap = function() {
+                try {
+                    const mapDiv = document.createElement('div');
+                    mapDiv.id = 'mapTest';
+                    
+                    const map = new google.maps.Map(mapDiv, {
+                        center: { lat: testLocation.lat, lng: testLocation.lng },
+                        zoom: 15
+                    });
+
+                    new google.maps.Marker({
+                        position: { lat: testLocation.lat, lng: testLocation.lng },
+                        map: map,
+                        title: 'Test Location'
+                    });
+
+                    updateTestCard('test1', 'success', mapDiv.outerHTML,
+                        '<strong>Sucesso!</strong> A Maps JavaScript API está funcionando perfeitamente! ✨'
+                    );
+                } catch (error) {
+                    updateTestCard('test1', 'error',
+                        '<div style="padding: 20px; text-align: center;">❌ Erro ao criar mapa</div>',
+                        `<strong>Erro:</strong> ${error.message}`
+                    );
+                }
+            };
+
+            document.head.appendChild(script);
+        }
+
+        function testStreetView(apiKey) {
+            const url = `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${testLocation.lat},${testLocation.lng}&fov=90&heading=235&pitch=10&key=${apiKey}`;
+            
+            const img = new Image();
+            img.onload = () => {
+                updateTestCard('test2', 'success',
+                    `<img src="${url}" alt="Street View">`,
+                    '<strong>Sucesso!</strong> A Street View Static API está funcionando! 🎉'
+                );
+            };
+            img.onerror = () => {
+                // Try to get more info about the error
+                fetch(url)
+                    .then(response => response.text())
+                    .then(text => {
+                        let errorMsg = 'Erro desconhecido';
+                        if (text.includes('API project is not authorized')) {
+                            errorMsg = 'API não autorizada para este projeto';
+                        } else if (text.includes('API key not valid')) {
+                            errorMsg = 'API key inválida';
+                        } else if (text.includes('billing')) {
+                            errorMsg = 'Faturamento não configurado';
+                        }
+                        
+                        updateTestCard('test2', 'error',
+                            '<div style="padding: 20px; text-align: center;">❌ Falha ao carregar</div>',
+                            `<strong>Erro:</strong> ${errorMsg}<br><br><strong>Possíveis soluções:</strong><br>• Ative a Street View Static API<br>• Remova restrições da API key<br>• Configure o faturamento<br>• Aguarde 5-10 minutos após ativar`
+                        );
+                    })
+                    .catch(() => {
+                        updateTestCard('test2', 'error',
+                            '<div style="padding: 20px; text-align: center;">❌ Falha ao carregar</div>',
+                            '<strong>Erro:</strong> Não foi possível carregar a imagem Street View'
+                        );
+                    });
+            };
+            img.src = url;
+        }
+
+        function testStaticMap(apiKey) {
+            const url = `https://maps.googleapis.com/maps/api/staticmap?center=${testLocation.lat},${testLocation.lng}&zoom=17&size=600x300&maptype=satellite&markers=color:red%7C${testLocation.lat},${testLocation.lng}&key=${apiKey}`;
+            
+            const img = new Image();
+            img.onload = () => {
+                updateTestCard('test3', 'success',
+                    `<img src="${url}" alt="Satellite View">`,
+                    '<strong>Sucesso!</strong> A Maps Static API está funcionando! 🛰️'
+                );
+            };
+            img.onerror = () => {
+                fetch(url)
+                    .then(response => response.text())
+                    .then(text => {
+                        let errorMsg = 'Erro desconhecido';
+                        if (text.includes('API project is not authorized')) {
+                            errorMsg = 'API não autorizada para este projeto';
+                        } else if (text.includes('API key not valid')) {
+                            errorMsg = 'API key inválida';
+                        } else if (text.includes('billing')) {
+                            errorMsg = 'Faturamento não configurado';
+                        }
+                        
+                        updateTestCard('test3', 'error',
+                            '<div style="padding: 20px; text-align: center;">❌ Falha ao carregar</div>',
+                            `<strong>Erro:</strong> ${errorMsg}<br><br><strong>Possíveis soluções:</strong><br>• Ative a Maps Static API<br>• Remova restrições da API key<br>• Configure o faturamento`
+                        );
+                    });
+            };
+            img.src = url;
+        }
+
+        async function testGeocoding(apiKey) {
+            const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(testLocation.address)}&key=${apiKey}`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.status === 'OK') {
+                    const result = data.results[0];
+                    updateTestCard('test4', 'success',
+                        `<div style="padding: 20px;">
+                            <strong>📍 Endereço:</strong> ${result.formatted_address}<br><br>
+                            <strong>🌍 Coordenadas:</strong><br>
+                            Latitude: ${result.geometry.location.lat}<br>
+                            Longitude: ${result.geometry.location.lng}
+                        </div>`,
+                        '<strong>Sucesso!</strong> A Geocoding API está funcionando! 🎯'
+                    );
+                } else {
+                    let errorMsg = data.error_message || data.status;
+                    if (data.status === 'REQUEST_DENIED') {
+                        errorMsg = 'Requisição negada - API não autorizada';
+                    }
+                    
+                    updateTestCard('test4', 'error',
+                        '<div style="padding: 20px; text-align: center;">❌ Erro na geocodificação</div>',
+                        `<strong>Erro:</strong> ${errorMsg}<br><br><strong>Status:</strong> ${data.status}`
+                    );
+                }
+            } catch (error) {
+                updateTestCard('test4', 'error',
+                    '<div style="padding: 20px; text-align: center;">❌ Erro na requisição</div>',
+                    `<strong>Erro:</strong> ${error.message}`
+                );
+            }
+        }
+    </script>
+</body>
+</html>
+

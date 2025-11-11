@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADM Maps - Property Manager v4</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #map { height: 600px; width: 100%; border-radius: 8px; }
+        .upload-area { transition: all 0.3s ease; }
+        .upload-area.dragging { border-color: #3b82f6; background-color: #eff6ff; }
+        table { font-size: 0.875rem; }
+        th { position: sticky; top: 0; background: #1f2937; z-index: 10; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">🗺️ ADM Maps - Property Manager v4</h1>
+            <p class="text-gray-600">Visualize propriedades antigas e compare com novas</p>
+        </div>
+
+        <!-- Map Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">📍 Mapa de Propriedades</h2>
+                <button id="deleteNewBtn" class="hidden bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors">
+                    🗑️ Deletar Novas Propriedades
+                </button>
+            </div>
+            <div id="map" class="w-full h-96 rounded-lg shadow-lg"></div>
+            <div class="mt-4 flex flex-wrap items-center gap-4 text-sm">
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-green-600 rounded-full"></div>
+                    <span class="text-gray-700">Available Lands (<span id="availableCount">0</span>)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-blue-600 rounded-full"></div>
+                    <span class="text-gray-700">Partners Available (<span id="partnersCount">0</span>)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-red-600 rounded-full"></div>
+                    <span class="text-gray-700">Sold Lands (<span id="soldCount">0</span>)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-orange-600 rounded-full"></div>
+                    <span class="text-gray-700">Blocked/Paused (<span id="blockedCount">0</span>)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-purple-600 rounded-full"></div>
+                    <span class="text-gray-700">Outros (<span id="outrosCount">0</span>)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-yellow-400 rounded-full"></div>
+                    <span class="text-gray-700">Novas Propriedades (<span id="newCount">0</span>)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">📤 Importar Novas Propriedades (CSV)</h3>
+            <div id="uploadArea" class="upload-area border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500">
+                <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <p class="text-lg text-gray-700 font-medium mb-2">Arraste e solte ou clique para selecionar</p>
+                <p class="text-sm text-gray-500">Arquivo CSV exportado do Parcel Fair</p>
+                <input type="file" id="csvInput" accept=".csv" class="hidden" multiple>
+            </div>
+            <div id="uploadedFiles" class="hidden mt-4 space-y-2"></div>
+        </div>
+
+        <!-- Downloads Section -->
+        <div id="downloadsSection" class="hidden bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">⬇️ Downloads por Condado</h3>
+            <div id="downloadButtons" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- Summary Section -->
+        <div id="summarySection" class="hidden bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">📊 Resumo</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600">Total de Propriedades</p>
+                    <p id="totalCount" class="text-2xl font-bold text-blue-600">0</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600">Condados</p>
+                    <p id="countyCount" class="text-2xl font-bold text-green-600">0</p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600">Arquivos Carregados</p>
+                    <p id="fileCount" class="text-2xl font-bold text-purple-600">0</p>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600">Novas no Mapa</p>
+                    <p id="mapCount" class="text-2xl font-bold text-yellow-600">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table Section -->
+        <div id="tableSection" class="hidden bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">📋 Dados Completos (Novas Propriedades)</h3>
+            <div class="overflow-x-auto max-h-96 overflow-y-auto">
+                <table id="dataTable" class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-800 text-white">
+                        <tr id="tableHeader"></tr>
+                    </thead>
+                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([27.3195, -81.3675], 10);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Layer groups
+        const existingPropertiesLayer = L.layerGroup().addTo(map);
+        const newPropertiesLayer = L.layerGroup().addTo(map);
+        
+        // Data storage
+        let allNewProperties = [];
+        let propertiesByCounty = {};
+        let uploadedFileNames = [];
+        let existingPropertiesCount = {
+            available: 0,
+            partners: 0,
+            sold: 0,
+            blocked: 0,
+            outros: 0
+        };
+
+        // Marker icons
+        const createIcon = (color) => L.icon({
+            iconUrl: `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36"><path fill="${color}" d="M12 2C7.58 2 4 5.58 4 10c0 6.5 8 14 8 14s8-7.5 8-14c0-4.42-3.58-8-8-8z"/><circle cx="12" cy="10" r="3" fill="#FFF"/></svg>`)}`,
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34]
+        });
+
+        const icons = {
+            available: createIcon('#16a34a'),    // green
+            partners: createIcon('#2563eb'),     // blue
+            sold: createIcon('#dc2626'),         // red
+            blocked: createIcon('#ea580c'),      // orange
+            outros: createIcon('#9333ea'),       // purple
+            new: createIcon('#facc15')           // yellow
+        };
+
+        // Load KML files automatically
+        const kmlFiles = [
+            { file: 'AvailableLands.kml', type: 'available', name: 'Available Lands' },
+            { file: 'PartnersAvailableLands.kml', type: 'partners', name: 'Partners Available' },
+            { file: 'SoldLands.kml', type: 'sold', name: 'Sold Lands' },
+            { file: 'BlockedPaused.kml', type: 'blocked', name: 'Blocked/Paused' },
+            { file: 'Outros.kml', type: 'outros', name: 'Outros' }
+        ];
+
+        let kmlLoadedCount = 0;
+
+        function parseKML(kmlText, type, name) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(kmlText, 'text/xml');
+            const placemarks = xmlDoc.getElementsByTagName('Placemark');
+            
+            let count = 0;
+            
+            for (let i = 0; i < placemarks.length; i++) {
+                const placemark = placemarks[i];
+                const nameEl = placemark.getElementsByTagName('name')[0];
+                const coordsEl = placemark.getElementsByTagName('coordinates')[0];
+                const descEl = placemark.getElementsByTagName('description')[0];
+                
+                if (coordsEl && coordsEl.textContent) {
+                    const coords = coordsEl.textContent.trim().split(',');
+                    const lon = parseFloat(coords[0]);
+                    const lat = parseFloat(coords[1]);
+                    
+                    if (!isNaN(lat) && !isNaN(lon)) {
+                        const propName = nameEl ? nameEl.textContent : 'Unknown';
+                        const desc = descEl ? descEl.textContent : '';
+                        
+                        const marker = L.marker([lat, lon], { icon: icons[type] })
+                            .bindPopup(`
+                                <div class="p-2">
+                                    <h4 class="font-bold text-lg mb-2">${propName}</h4>
+                                    <p class="text-sm"><strong>Categoria:</strong> ${name}</p>
+                                    <div class="text-xs mt-2">${desc.substring(0, 200)}...</div>
+                                </div>
+                            `);
+                        existingPropertiesLayer.addLayer(marker);
+                        count++;
+                    }
+                }
+            }
+            
+            existingPropertiesCount[type] = count;
+            document.getElementById(`${type}Count`).textContent = count;
+        }
+
+        function loadKMLFiles() {
+            kmlFiles.forEach(({ file, type, name }) => {
+                fetch(file)
+                    .then(response => response.text())
+                    .then(kmlText => {
+                        parseKML(kmlText, type, name);
+                        kmlLoadedCount++;
+                        
+                        if (kmlLoadedCount === kmlFiles.length) {
+                            // Fit map to show all existing properties
+                            const layers = existingPropertiesLayer.getLayers();
+                            if (layers.length > 0) {
+                                const bounds = L.latLngBounds([]);
+                                layers.forEach(layer => bounds.extend(layer.getLatLng()));
+                                map.fitBounds(bounds, { padding: [50, 50] });
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        console.error(`Error loading ${file}:`, err);
+                        kmlLoadedCount++;
+                        
+                        if (kmlLoadedCount === kmlFiles.length) {
+                            // Fit map to show all existing properties
+                            const layers = existingPropertiesLayer.getLayers();
+                            if (layers.length > 0) {
+                                const bounds = L.latLngBounds([]);
+                                layers.forEach(layer => bounds.extend(layer.getLatLng()));
+                                map.fitBounds(bounds, { padding: [50, 50] });
+                            }
+                        }
+                    });
+            });
+        }
+
+        // Load KML files on page load
+        loadKMLFiles();
+
+        // Upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const csvInput = document.getElementById('csvInput');
+
+        uploadArea.addEventListener('click', () => csvInput.click());
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragging');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragging');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragging');
+            handleFiles(e.dataTransfer.files);
+        });
+        csvInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.name.endsWith('.csv')) {
+                    uploadedFileNames.push(file.name);
+                    Papa.parse(file, {
+                        header: true,
+                        complete: (results) => {
+                            processCSV(results.data, file.name);
+                        }
+                    });
+                }
+            });
+        }
+
+        function processCSV(data, fileName) {
+            const validData = data.filter(row => row.Coordinates && row.Coordinates.includes(','));
+            
+            validData.forEach(row => {
+                const coords = row.Coordinates.replace(/"/g, '').trim();
+                const [lat, lon] = coords.split(',').map(c => parseFloat(c.trim()));
+                
+                if (!isNaN(lat) && !isNaN(lon)) {
+                    const property = {
+                        ...row,
+                        Latitude: lat,
+                        Longitude: lon,
+                        fileName: fileName
+                    };
+                    
+                    allNewProperties.push(property);
+                    
+                    // Group by county
+                    const county = row.County || 'Unknown';
+                    if (!propertiesByCounty[county]) {
+                        propertiesByCounty[county] = [];
+                    }
+                    propertiesByCounty[county].push(property);
+                    
+                    // Add to map
+                    const marker = L.marker([lat, lon], { icon: icons.new })
+                        .bindPopup(`
+                            <div class="p-2">
+                                <h4 class="font-bold text-lg mb-2 text-yellow-600">🆕 ${row.Name || 'N/A'}</h4>
+                                <p class="text-sm"><strong>Parcel:</strong> ${row['Parcel Number'] || 'N/A'}</p>
+                                <p class="text-sm"><strong>Address:</strong> ${row.Address || 'N/A'}</p>
+                                <p class="text-sm"><strong>City:</strong> ${row.City || 'N/A'}</p>
+                                <p class="text-sm"><strong>County:</strong> ${row.County || 'N/A'}</p>
+                                <p class="text-sm"><strong>Acres:</strong> ${row.Acres || 'N/A'}</p>
+                                <p class="text-sm"><strong>Amount Due:</strong> ${row['Amount Due'] || 'N/A'}</p>
+                                <p class="text-sm"><strong>Next Auction:</strong> ${row['Next Auction'] || 'N/A'}</p>
+                                <a href="${row['Parcel Fair Report']}" target="_blank" class="text-blue-600 hover:underline text-sm">Ver Relatório</a>
+                            </div>
+                        `);
+                    newPropertiesLayer.addLayer(marker);
+                }
+            });
+            
+            updateUI();
+        }
+
+        function updateUI() {
+            // Update summary
+            document.getElementById('summarySection').classList.remove('hidden');
+            document.getElementById('totalCount').textContent = allNewProperties.length;
+            document.getElementById('countyCount').textContent = Object.keys(propertiesByCounty).length;
+            document.getElementById('fileCount').textContent = uploadedFileNames.length;
+            document.getElementById('mapCount').textContent = allNewProperties.length;
+            document.getElementById('newCount').textContent = allNewProperties.length;
+            
+            // Show delete button
+            if (allNewProperties.length > 0) {
+                document.getElementById('deleteNewBtn').classList.remove('hidden');
+            }
+            
+            // Update uploaded files list
+            const uploadedFilesDiv = document.getElementById('uploadedFiles');
+            if (uploadedFileNames.length > 0) {
+                uploadedFilesDiv.classList.remove('hidden');
+                uploadedFilesDiv.innerHTML = uploadedFileNames.map(name => `
+                    <div class="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-sm font-medium text-green-800">${name}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // Create download buttons
+            createDownloadButtons();
+            
+            // Update table
+            updateTable();
+            
+            // Fit map to show all markers (existing + new)
+            if (allNewProperties.length > 0) {
+                const allBounds = L.latLngBounds([]);
+                existingPropertiesLayer.eachLayer(layer => {
+                    allBounds.extend(layer.getLatLng());
+                });
+                newPropertiesLayer.eachLayer(layer => {
+                    allBounds.extend(layer.getLatLng());
+                });
+                map.fitBounds(allBounds, { padding: [50, 50] });
+            }
+        }
+
+        function createDownloadButtons() {
+            const downloadsSection = document.getElementById('downloadsSection');
+            const downloadButtons = document.getElementById('downloadButtons');
+            
+            if (Object.keys(propertiesByCounty).length > 0) {
+                downloadsSection.classList.remove('hidden');
+                downloadButtons.innerHTML = '';
+                
+                Object.entries(propertiesByCounty).forEach(([county, properties]) => {
+                    const date = extractDate(properties[0]['Next Auction']);
+                    const fileName = `${county}_${date}_coordinates.csv`;
+                    
+                    const button = document.createElement('button');
+                    button.className = 'bg-blue-600 text-white px-6 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-left';
+                    button.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-lg font-bold">${county}</p>
+                                <p class="text-sm opacity-90">${properties.length} propriedades</p>
+                            </div>
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                        </div>
+                    `;
+                    button.onclick = () => downloadCountyCSV(county, properties, fileName);
+                    downloadButtons.appendChild(button);
+                });
+            }
+        }
+
+        function extractDate(dateString) {
+            if (!dateString) return '0000';
+            const parts = dateString.split('/');
+            if (parts.length === 3) {
+                const day = parts[1].padStart(2, '0');
+                const month = parts[0].padStart(2, '0');
+                return day + month;
+            }
+            return '0000';
+        }
+
+        function downloadCountyCSV(county, properties, fileName) {
+            const csvData = properties.map(prop => ({
+                'Name': prop.Name || '',
+                'Parcel ID': prop['Parcel Number'] || '',
+                'Address': prop.Address || '',
+                'City': prop.City || '',
+                'State': prop.State || '',
+                'Zip': prop.Zip || '',
+                'County': prop.County || '',
+                'Acres': prop.Acres || '',
+                'Amount Due': prop['Amount Due'] || '',
+                'Latitude': prop.Latitude,
+                'Longitude': prop.Longitude,
+                'Coordinates': `${prop.Latitude},${prop.Longitude}`,
+                'Parcel Fair Report': prop['Parcel Fair Report'] || '',
+                'Next Auction': prop['Next Auction'] || ''
+            }));
+            
+            const csv = Papa.unparse(csvData);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function updateTable() {
+            if (allNewProperties.length === 0) return;
+            
+            document.getElementById('tableSection').classList.remove('hidden');
+            
+            // Get all column names
+            const columns = Object.keys(allNewProperties[0]).filter(col => col !== 'fileName');
+            
+            // Create header
+            const tableHeader = document.getElementById('tableHeader');
+            tableHeader.innerHTML = columns.map(col => 
+                `<th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">${col}</th>`
+            ).join('');
+            
+            // Create rows
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = allNewProperties.map(prop => 
+                `<tr class="hover:bg-gray-50">
+                    ${columns.map(col => {
+                        let value = prop[col] || '';
+                        if (col === 'Parcel Fair Report' && value) {
+                            return `<td class="px-4 py-2 whitespace-nowrap"><a href="${value}" target="_blank" class="text-blue-600 hover:underline">Ver</a></td>`;
+                        }
+                        return `<td class="px-4 py-2 whitespace-nowrap">${value}</td>`;
+                    }).join('')}
+                </tr>`
+            ).join('');
+        }
+
+        // Delete new properties
+        document.getElementById('deleteNewBtn').addEventListener('click', () => {
+            if (confirm('Tem certeza que deseja deletar todas as novas propriedades? Esta ação não pode ser desfeita.')) {
+                // Clear only new markers
+                newPropertiesLayer.clearLayers();
+                
+                // Clear data
+                allNewProperties = [];
+                propertiesByCounty = {};
+                uploadedFileNames = [];
+                csvInput.value = '';
+                
+                // Update counters
+                document.getElementById('newCount').textContent = '0';
+                
+                // Hide sections
+                document.getElementById('deleteNewBtn').classList.add('hidden');
+                document.getElementById('summarySection').classList.add('hidden');
+                document.getElementById('downloadsSection').classList.add('hidden');
+                document.getElementById('tableSection').classList.add('hidden');
+                document.getElementById('uploadedFiles').classList.add('hidden');
+                
+                // Fit map back to existing properties
+                const layers = existingPropertiesLayer.getLayers();
+                if (layers.length > 0) {
+                    const bounds = L.latLngBounds([]);
+                    layers.forEach(layer => bounds.extend(layer.getLatLng()));
+                    map.fitBounds(bounds, { padding: [50, 50] });
+                }
+                
+                alert('✅ Todas as novas propriedades foram deletadas!');
+            }
+        });
+    </script>
+</body>
+</html>
+

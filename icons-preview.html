@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview dos Ícones - GT Lands</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #2F4F4F;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #B8956A;
+            margin-bottom: 40px;
+        }
+        .icons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        .icon-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .icon-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .icon-title {
+            font-weight: bold;
+            color: #2F4F4F;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .icon-display {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-description {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .legend {
+            background: #fff3cd;
+            border-left: 4px solid #B8956A;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 5px;
+        }
+        .legend h3 {
+            margin-top: 0;
+            color: #2F4F4F;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 Preview dos Ícones do Mapa</h1>
+        <p class="subtitle">GT Lands Property Manager</p>
+
+        <div class="legend">
+            <h3>📋 Especificações Confirmadas:</h3>
+            <ul>
+                <li><strong>Available Lands:</strong> Casa VERDE</li>
+                <li><strong>Sold Lands:</strong> Casa PRETA com texto "SOLD"</li>
+                <li><strong>Partners Available:</strong> Casa CINZA (mantido)</li>
+                <li><strong>Blocked/Paused:</strong> Círculo proibido VERMELHO (mantido)</li>
+                <li><strong>Novas Propriedades:</strong> Casa AMARELA (mantido)</li>
+            </ul>
+        </div>
+
+        <div class="icons-grid">
+            <!-- Available Lands -->
+            <div class="icon-card">
+                <div class="icon-title">🟢 Available Lands</div>
+                <div class="icon-display">
+                    <svg width="60" height="75" viewBox="0 0 60 75">
+                        <!-- Pin base -->
+                        <path d="M30 5C18 5 8 15 8 27c0 18 22 40 22 40s22-22 22-40c0-12-10-22-22-22z" 
+                              fill="#16a34a" stroke="#0f7a3a" stroke-width="2"/>
+                        <!-- House -->
+                        <g transform="translate(30, 27)">
+                            <!-- Roof -->
+                            <path d="M-8,-8 L0,-14 L8,-8 Z" fill="#FFF"/>
+                            <!-- Body -->
+                            <rect x="-8" y="-8" width="16" height="12" fill="#FFF"/>
+                            <!-- Door -->
+                            <rect x="-3" y="-2" width="6" height="8" fill="#16a34a"/>
+                            <!-- Window -->
+                            <rect x="-7" y="-6" width="4" height="4" fill="#87CEEB"/>
+                            <rect x="3" y="-6" width="4" height="4" fill="#87CEEB"/>
+                        </g>
+                    </svg>
+                </div>
+                <div class="icon-description">
+                    Casa branca dentro de marcador verde<br>
+                    Representa propriedades disponíveis
+                </div>
+            </div>
+
+            <!-- Sold Lands -->
+            <div class="icon-card">
+                <div class="icon-title">⚫ Sold Lands</div>
+                <div class="icon-display">
+                    <svg width="60" height="75" viewBox="0 0 60 75">
+                        <!-- Pin base -->
+                        <path d="M30 5C18 5 8 15 8 27c0 18 22 40 22 40s22-22 22-40c0-12-10-22-22-22z" 
+                              fill="#1a1a1a" stroke="#000" stroke-width="2"/>
+                        <!-- House -->
+                        <g transform="translate(30, 27)">
+                            <!-- Roof -->
+                            <path d="M-8,-8 L0,-14 L8,-8 Z" fill="#FFF"/>
+                            <!-- Body -->
+                            <rect x="-8" y="-8" width="16" height="12" fill="#FFF"/>
+                            <!-- Door -->
+                            <rect x="-3" y="-2" width="6" height="8" fill="#1a1a1a"/>
+                            <!-- Window -->
+                            <rect x="-7" y="-6" width="4" height="4" fill="#87CEEB"/>
+                            <rect x="3" y="-6" width="4" height="4" fill="#87CEEB"/>
+                        </g>
+                        <!-- SOLD badge -->
+                        <rect x="15" y="8" width="30" height="12" fill="#dc2626" rx="2"/>
+                        <text x="30" y="17" font-family="Arial" font-size="8" font-weight="bold" 
+                              fill="#FFF" text-anchor="middle">SOLD</text>
+                    </svg>
+                </div>
+                <div class="icon-description">
+                    Casa branca dentro de marcador preto<br>
+                    Badge vermelho com "SOLD" em branco
+                </div>
+            </div>
+
+            <!-- Partners Available -->
+            <div class="icon-card">
+                <div class="icon-title">⚫ Partners Available</div>
+                <div class="icon-display">
+                    <svg width="60" height="75" viewBox="0 0 60 75">
+                        <!-- Pin base -->
+                        <path d="M30 5C18 5 8 15 8 27c0 18 22 40 22 40s22-22 22-40c0-12-10-22-22-22z" 
+                              fill="#6b7280" stroke="#4b5563" stroke-width="2"/>
+                        <!-- House -->
+                        <g transform="translate(30, 27)">
+                            <!-- Roof -->
+                            <path d="M-8,-8 L0,-14 L8,-8 Z" fill="#FFF"/>
+                            <!-- Body -->
+                            <rect x="-8" y="-8" width="16" height="12" fill="#FFF"/>
+                            <!-- Door -->
+                            <rect x="-3" y="-2" width="6" height="8" fill="#6b7280"/>
+                            <!-- Window -->
+                            <rect x="-7" y="-6" width="4" height="4" fill="#87CEEB"/>
+                            <rect x="3" y="-6" width="4" height="4" fill="#87CEEB"/>
+                        </g>
+                    </svg>
+                </div>
+                <div class="icon-description">
+                    Casa branca dentro de marcador cinza<br>
+                    Representa propriedades de parceiros (mantido)
+                </div>
+            </div>
+
+            <!-- Blocked/Paused -->
+            <div class="icon-card">
+                <div class="icon-title">🔴 Blocked/Paused</div>
+                <div class="icon-display">
+                    <svg width="60" height="75" viewBox="0 0 60 75">
+                        <!-- Pin base -->
+                        <path d="M30 5C18 5 8 15 8 27c0 18 22 40 22 40s22-22 22-40c0-12-10-22-22-22z" 
+                              fill="#dc2626" stroke="#b91c1c" stroke-width="2"/>
+                        <!-- Prohibited circle -->
+                        <circle cx="30" cy="27" r="10" fill="none" stroke="#FFF" stroke-width="2"/>
+                        <line x1="23" y1="20" x2="37" y2="34" stroke="#FFF" stroke-width="2"/>
+                    </svg>
+                </div>
+                <div class="icon-description">
+                    Círculo proibido branco em marcador vermelho<br>
+                    Representa propriedades bloqueadas (mantido)
+                </div>
+            </div>
+
+            <!-- Novas Propriedades -->
+            <div class="icon-card">
+                <div class="icon-title">🟡 Novas Propriedades</div>
+                <div class="icon-display">
+                    <svg width="60" height="75" viewBox="0 0 60 75">
+                        <!-- Pin base -->
+                        <path d="M30 5C18 5 8 15 8 27c0 18 22 40 22 40s22-22 22-40c0-12-10-22-22-22z" 
+                              fill="#facc15" stroke="#eab308" stroke-width="2"/>
+                        <!-- House -->
+                        <g transform="translate(30, 27)">
+                            <!-- Roof -->
+                            <path d="M-8,-8 L0,-14 L8,-8 Z" fill="#FFF"/>
+                            <!-- Body -->
+                            <rect x="-8" y="-8" width="16" height="12" fill="#FFF"/>
+                            <!-- Door -->
+                            <rect x="-3" y="-2" width="6" height="8" fill="#facc15"/>
+                            <!-- Window -->
+                            <rect x="-7" y="-6" width="4" height="4" fill="#87CEEB"/>
+                            <rect x="3" y="-6" width="4" height="4" fill="#87CEEB"/>
+                        </g>
+                    </svg>
+                </div>
+                <div class="icon-description">
+                    Casa branca dentro de marcador amarelo<br>
+                    Representa novas propriedades do CSV (mantido)
+                </div>
+            </div>
+        </div>
+
+        <div class="legend" style="margin-top: 40px; background: #d1fae5; border-color: #16a34a;">
+            <h3>✅ Próximos Passos:</h3>
+            <p><strong>1.</strong> Revise os ícones acima</p>
+            <p><strong>2.</strong> Confirme se está de acordo ou solicite ajustes</p>
+            <p><strong>3.</strong> Após aprovação, implementarei no dashboard junto com a logo GT Lands no header</p>
+        </div>
+    </div>
+</body>
+</html>
+

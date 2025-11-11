@@ -908,3 +908,29 @@
 - [x] Aplicar estilo visual consistente com design do dashboard
 - [x] Testar funcionalidade em todos os 7 campos de API
 
+
+
+
+## Dashboard v21.6 - Correção de Testadores de APIs Imobiliárias
+
+### Bug Report
+- [ ] Investigar por que os testadores de APIs imobiliárias não estão funcionando
+- [ ] Verificar funções testZillow(), testRealtor(), testRealtyMole()
+- [ ] Corrigir implementação dos testadores
+- [ ] Testar com APIs reais (se disponíveis) ou mock data
+- [ ] Validar feedback visual de sucesso/erro
+
+
+
+
+## Dashboard v21.6 - Correção de Testadores de APIs Imobiliárias
+
+- [x] Adicionar função saveZillowKey()
+- [x] Adicionar função saveRealtorKey()
+- [x] Adicionar função saveRealtyMoleKey()
+- [x] Adicionar função saveRealEstateApiKeys()
+- [x] Adicionar função testZillow()
+- [x] Adicionar função testRealtor()
+- [x] Adicionar função testRealtyMole()
+- [x] Testar funcionalidade de salvar e testar APIs
+

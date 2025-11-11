@@ -1008,6 +1008,203 @@
         }
 
         // ========================================
+        // REAL ESTATE APIs - SAVE & TEST
+        // ========================================
+
+        function saveZillowKey() {
+            const apiKey = document.getElementById('zillowApiKey').value.trim();
+            if (!apiKey) {
+                alert('❌ Por favor, insira uma API Key!');
+                return;
+            }
+            localStorage.setItem('zillowApiKey', apiKey);
+            showSaveSuccess('zillowTestResult');
+        }
+
+        function saveRealtorKey() {
+            const apiKey = document.getElementById('realtorApiKey').value.trim();
+            if (!apiKey) {
+                alert('❌ Por favor, insira uma API Key!');
+                return;
+            }
+            localStorage.setItem('realtorApiKey', apiKey);
+            showSaveSuccess('realtorTestResult');
+        }
+
+        function saveRealtyMoleKey() {
+            const apiKey = document.getElementById('realtyMoleApiKey').value.trim();
+            if (!apiKey) {
+                alert('❌ Por favor, insira uma API Key!');
+                return;
+            }
+            localStorage.setItem('realtyMoleApiKey', apiKey);
+            showSaveSuccess('realtyMoleTestResult');
+        }
+
+        function saveRealEstateApiKeys() {
+            const zillowKey = document.getElementById('zillowApiKey').value.trim();
+            const realtorKey = document.getElementById('realtorApiKey').value.trim();
+            const realtyMoleKey = document.getElementById('realtyMoleApiKey').value.trim();
+
+            if (zillowKey) localStorage.setItem('zillowApiKey', zillowKey);
+            if (realtorKey) localStorage.setItem('realtorApiKey', realtorKey);
+            if (realtyMoleKey) localStorage.setItem('realtyMoleApiKey', realtyMoleKey);
+
+            const indicator = document.getElementById('savedIndicatorRealEstate');
+            indicator.classList.add('show');
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 3000);
+        }
+
+        async function testZillow() {
+            const apiKey = document.getElementById('zillowApiKey').value.trim();
+            
+            if (!apiKey) {
+                alert('❌ Por favor, insira uma API Key primeiro!');
+                return;
+            }
+
+            const resultDiv = document.getElementById('zillowTestResult');
+            resultDiv.innerHTML = '<div class="status loading" style="margin-top: 10px;"><span class="loading-spinner"></span> Testando Zillow API...</div>';
+
+            try {
+                const response = await fetch('https://zillow-com1.p.rapidapi.com/property?zpid=61975204', {
+                    method: 'GET',
+                    headers: {
+                        'X-RapidAPI-Key': apiKey,
+                        'X-RapidAPI-Host': 'zillow-com1.p.rapidapi.com'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data) {
+                    resultDiv.innerHTML = `
+                        <div class="success-message" style="margin-top: 10px;">
+                            <strong>✅ Sucesso!</strong> Zillow API está funcionando!<br><br>
+                            <strong>Propriedade de Teste:</strong> ${data.address?.streetAddress || 'N/A'}<br>
+                            <strong>Cidade:</strong> ${data.address?.city || 'N/A'}, ${data.address?.state || 'N/A'}<br>
+                            <strong>Preço:</strong> $${data.price?.toLocaleString() || 'N/A'}
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.message || 'Erro desconhecido');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error-message" style="margin-top: 10px;">
+                        <strong>❌ Erro:</strong> ${error.message}<br><br>
+                        <strong>Possíveis causas:</strong><br>
+                        • API key inválida<br>
+                        • Sem créditos disponíveis no RapidAPI<br>
+                        • API não subscrita no RapidAPI<br><br>
+                        <a href="https://rapidapi.com/apimaker/api/zillow-com1" target="_blank">Verificar Subscription →</a>
+                    </div>
+                `;
+            }
+        }
+
+        async function testRealtor() {
+            const apiKey = document.getElementById('realtorApiKey').value.trim();
+            
+            if (!apiKey) {
+                alert('❌ Por favor, insira uma API Key primeiro!');
+                return;
+            }
+
+            const resultDiv = document.getElementById('realtorTestResult');
+            resultDiv.innerHTML = '<div class="status loading" style="margin-top: 10px;"><span class="loading-spinner"></span> Testando Realtor.com API...</div>';
+
+            try {
+                const response = await fetch('https://realtor.p.rapidapi.com/properties/v3/list?limit=1&offset=0&postal_code=90004&status=for_sale&sort=relevance', {
+                    method: 'GET',
+                    headers: {
+                        'X-RapidAPI-Key': apiKey,
+                        'X-RapidAPI-Host': 'realtor.p.rapidapi.com'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.data && data.data.home_search && data.data.home_search.results) {
+                    const property = data.data.home_search.results[0];
+                    resultDiv.innerHTML = `
+                        <div class="success-message" style="margin-top: 10px;">
+                            <strong>✅ Sucesso!</strong> Realtor.com API está funcionando!<br><br>
+                            <strong>Propriedade de Teste:</strong> ${property.location?.address?.line || 'N/A'}<br>
+                            <strong>Cidade:</strong> ${property.location?.address?.city || 'N/A'}, ${property.location?.address?.state_code || 'N/A'}<br>
+                            <strong>Preço:</strong> $${property.list_price?.toLocaleString() || 'N/A'}
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.message || 'Erro desconhecido');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error-message" style="margin-top: 10px;">
+                        <strong>❌ Erro:</strong> ${error.message}<br><br>
+                        <strong>Possíveis causas:</strong><br>
+                        • API key inválida<br>
+                        • Sem créditos disponíveis no RapidAPI<br>
+                        • API não subscrita no RapidAPI<br><br>
+                        <a href="https://rapidapi.com/apidojo/api/realtor" target="_blank">Verificar Subscription →</a>
+                    </div>
+                `;
+            }
+        }
+
+        async function testRealtyMole() {
+            const apiKey = document.getElementById('realtyMoleApiKey').value.trim();
+            
+            if (!apiKey) {
+                alert('❌ Por favor, insira uma API Key primeiro!');
+                return;
+            }
+
+            const resultDiv = document.getElementById('realtyMoleTestResult');
+            resultDiv.innerHTML = '<div class="status loading" style="margin-top: 10px;"><span class="loading-spinner"></span> Testando Realty Mole API...</div>';
+
+            try {
+                // Teste com endereço de exemplo
+                const response = await fetch('https://realty-mole-property-api.p.rapidapi.com/properties?address=5500%20Grand%20Lake%20Drive%2C%20San%20Antonio%2C%20TX', {
+                    method: 'GET',
+                    headers: {
+                        'X-RapidAPI-Key': apiKey,
+                        'X-RapidAPI-Host': 'realty-mole-property-api.p.rapidapi.com'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data && data.length > 0) {
+                    const property = data[0];
+                    resultDiv.innerHTML = `
+                        <div class="success-message" style="margin-top: 10px;">
+                            <strong>✅ Sucesso!</strong> Realty Mole API está funcionando!<br><br>
+                            <strong>Propriedade de Teste:</strong> ${property.addressLine1 || 'N/A'}<br>
+                            <strong>Cidade:</strong> ${property.city || 'N/A'}, ${property.state || 'N/A'}<br>
+                            <strong>Avaliação:</strong> $${property.assessedValue?.toLocaleString() || 'N/A'}
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.message || 'Erro desconhecido');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error-message" style="margin-top: 10px;">
+                        <strong>❌ Erro:</strong> ${error.message}<br><br>
+                        <strong>Possíveis causas:</strong><br>
+                        • API key inválida<br>
+                        • Sem créditos disponíveis<br>
+                        • Plano gratuito expirado<br><br>
+                        <a href="https://www.realtymole.com/api" target="_blank">Verificar API Key →</a>
+                    </div>
+                `;
+            }
+        }
+
+        // ========================================
         // GOOGLE SHEETS INTEGRATION
         // ========================================
 

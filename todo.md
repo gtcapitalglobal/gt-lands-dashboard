@@ -1010,3 +1010,16 @@
 - [ ] Fazer commits e push
 - [ ] Verificar deploy no Netlify
 
+
+
+
+## Dashboard v22.0.1 - Correção de Importação CSV
+
+### Bug: CSV do Parcel Fair não carrega propriedades na tabela
+- [x] Analisar formato do CSV do Parcel Fair
+- [x] Atualizar função processCSV() para remover aspas das coordenadas
+- [x] Adicionar skipEmptyLines no PapaParse
+- [x] Adicionar trim() para validar coordenadas
+- [ ] Testar com CSV real (Polk.csv - 87 propriedades)
+- [ ] Fazer commit e push
+

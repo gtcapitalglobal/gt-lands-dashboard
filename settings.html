@@ -107,13 +107,36 @@
             margin-bottom: 8px;
         }
 
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
         .input-group input {
             width: 100%;
             padding: 12px;
+            padding-right: 45px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 1rem;
             transition: all 0.3s;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 5px;
+            color: #666;
+            transition: color 0.3s;
+        }
+
+        .toggle-password:hover {
+            color: #667eea;
         }
 
         .input-group input:focus {
@@ -370,7 +393,10 @@
                 
                 <div class="input-group">
                     <label for="googleMapsApiKey">API Key</label>
-                    <input type="text" id="googleMapsApiKey" placeholder="Cole sua Google Maps API Key aqui...">
+                    <div class="input-wrapper">
+                        <input type="password" id="googleMapsApiKey" placeholder="Cole sua Google Maps API Key aqui...">
+                        <button type="button" class="toggle-password" onclick="togglePassword('googleMapsApiKey')">👁️</button>
+                    </div>
                     <small>Obtenha sua API key em: <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a></small>
                 </div>
 
@@ -411,7 +437,10 @@
                 <h3>OpenAI API</h3>
                 <div class="input-group">
                     <label for="openaiApiKey">API Key</label>
-                    <input type="text" id="openaiApiKey" placeholder="sk-...">
+                    <div class="input-wrapper">
+                        <input type="password" id="openaiApiKey" placeholder="sk-...">
+                        <button type="button" class="toggle-password" onclick="togglePassword('openaiApiKey')">👁️</button>
+                    </div>
                     <small>Para análise de red flags e descrições</small>
                 </div>
                 <div class="button-group">
@@ -423,7 +452,10 @@
                 <h3>Google Gemini API</h3>
                 <div class="input-group">
                     <label for="geminiApiKey">API Key</label>
-                    <input type="text" id="geminiApiKey" placeholder="AIza...">
+                    <div class="input-wrapper">
+                        <input type="password" id="geminiApiKey" placeholder="AIza...">
+                        <button type="button" class="toggle-password" onclick="togglePassword('geminiApiKey')">👁️</button>
+                    </div>
                     <small>Para análise de imagens e visão computacional</small>
                 </div>
                 <div class="button-group">
@@ -435,7 +467,10 @@
                 <h3>Perplexity (Sonar) API</h3>
                 <div class="input-group">
                     <label for="perplexityApiKey">API Key</label>
-                    <input type="text" id="perplexityApiKey" placeholder="pplx-...">
+                    <div class="input-wrapper">
+                        <input type="password" id="perplexityApiKey" placeholder="pplx-...">
+                        <button type="button" class="toggle-password" onclick="togglePassword('perplexityApiKey')">👁️</button>
+                    </div>
                     <small>Para pesquisa de mercado e informações atualizadas</small>
                 </div>
                 <div class="button-group">
@@ -453,7 +488,10 @@
                 <h3>Zillow API (RapidAPI)</h3>
                 <div class="input-group">
                     <label for="zillowApiKey">X-RapidAPI-Key</label>
-                    <input type="text" id="zillowApiKey" placeholder="sua-rapidapi-key...">
+                    <div class="input-wrapper">
+                        <input type="password" id="zillowApiKey" placeholder="sua-rapidapi-key...">
+                        <button type="button" class="toggle-password" onclick="togglePassword('zillowApiKey')">👁️</button>
+                    </div>
                     <small>Para dados de propriedades do Zillow | <a href="https://rapidapi.com/apimaker/api/zillow-com1" target="_blank">🔗 Obter API Key</a></small>
                 </div>
                 <div class="button-group">
@@ -465,7 +503,10 @@
                 <h3>Realtor.com API (RapidAPI)</h3>
                 <div class="input-group">
                     <label for="realtorApiKey">X-RapidAPI-Key</label>
-                    <input type="text" id="realtorApiKey" placeholder="sua-rapidapi-key...">
+                    <div class="input-wrapper">
+                        <input type="password" id="realtorApiKey" placeholder="sua-rapidapi-key...">
+                        <button type="button" class="toggle-password" onclick="togglePassword('realtorApiKey')">👁️</button>
+                    </div>
                     <small>Para dados de propriedades do Realtor.com | <a href="https://rapidapi.com/apidojo/api/realtor" target="_blank">🔗 Obter API Key</a></small>
                 </div>
                 <div class="button-group">
@@ -477,7 +518,10 @@
                 <h3>Realty Mole API</h3>
                 <div class="input-group">
                     <label for="realtyMoleApiKey">API Key</label>
-                    <input type="text" id="realtyMoleApiKey" placeholder="sua-realtymole-key...">
+                    <div class="input-wrapper">
+                        <input type="password" id="realtyMoleApiKey" placeholder="sua-realtymole-key...">
+                        <button type="button" class="toggle-password" onclick="togglePassword('realtyMoleApiKey')">👁️</button>
+                    </div>
                     <small>Para avaliações e dados de propriedades | <a href="https://www.realtymole.com/api" target="_blank">🔗 Obter API Key</a></small>
                 </div>
                 <div class="button-group">
@@ -501,6 +545,20 @@
     </div>
 
     <script>
+        // Toggle password visibility
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const button = input.nextElementSibling;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                button.textContent = '🚫'; // Ícone de esconder
+            } else {
+                input.type = 'password';
+                button.textContent = '👁️'; // Ícone de mostrar
+            }
+        }
+
         // Load saved API keys on page load
         window.addEventListener('DOMContentLoaded', () => {
             const googleMapsKey = localStorage.getItem('googleMapsApiKey');

@@ -878,3 +878,33 @@
 - [ ] Atualizar versão no título do dashboard
 - [ ] Fazer commit e push para GitHub
 
+
+
+
+## Dashboard v21.5 - Esconder API Keys
+
+### Segurança: Esconder API Keys nos Campos
+- [ ] Mudar inputs de API keys para type="password"
+- [ ] Adicionar botão "👁️ Mostrar/Esconder" para cada campo
+- [ ] Manter funcionalidade de copiar API key
+- [ ] Garantir que API keys carregadas do Google Sheets sejam escondidas
+- [ ] Testar com todas as APIs (Google Maps, OpenAI, Gemini, Perplexity, RapidAPI)
+
+### Checkpoint v21.5
+- [ ] Testar funcionalidade de mostrar/esconder
+- [ ] Verificar código completo
+- [ ] Atualizar versão no dashboard
+- [ ] Fazer commit e push para GitHub
+
+
+
+
+## Dashboard v21.5 - Segurança de API Keys
+
+### Mascaramento de Senhas
+- [x] Alterar todos os campos de API Key para type="password"
+- [x] Adicionar botões de mostrar/esconder (👁️/🚫) em cada campo
+- [x] Implementar função togglePassword() para alternar visibilidade
+- [x] Aplicar estilo visual consistente com design do dashboard
+- [x] Testar funcionalidade em todos os 7 campos de API
+

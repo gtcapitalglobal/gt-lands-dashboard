@@ -1,0 +1,21 @@
+name = "gt-lands-api"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Variáveis de ambiente (secrets)
+# Configure via: wrangler secret put <NAME>
+# 
+# Secrets necessárias:
+# - GOOGLE_MAPS_API_KEY
+# - OPENAI_API_KEY
+# - GEMINI_API_KEY
+# - PERPLEXITY_API_KEY
+# - RAPIDAPI_KEY (para Zillow, Realtor, Realty Mole)
+
+[env.production]
+name = "gt-lands-api"
+route = "api.gt-lands-dashboard.pages.dev/*"
+
+[env.development]
+name = "gt-lands-api-dev"
+

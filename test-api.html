@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GT Lands - Teste de APIs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-center">🧪 Teste de APIs - GT Lands Backend</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">📡 Status do Worker</h2>
+            <div id="worker-status" class="text-gray-600">Testando...</div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Google Maps API -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold mb-3">🗺️ Google Maps API</h3>
+                <button onclick="testGoogleMaps()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full">
+                    Testar Geocoding
+                </button>
+                <div id="google-maps-result" class="mt-3 text-sm"></div>
+            </div>
+
+            <!-- OpenAI API -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold mb-3">🤖 OpenAI API</h3>
+                <button onclick="testOpenAI()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full">
+                    Testar GPT-4
+                </button>
+                <div id="openai-result" class="mt-3 text-sm"></div>
+            </div>
+
+            <!-- Gemini API -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold mb-3">✨ Google Gemini API</h3>
+                <button onclick="testGemini()" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 w-full">
+                    Testar Gemini
+                </button>
+                <div id="gemini-result" class="mt-3 text-sm"></div>
+            </div>
+
+            <!-- Perplexity API -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold mb-3">🔍 Perplexity API</h3>
+                <button onclick="testPerplexity()" class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600 w-full">
+                    Testar Sonar
+                </button>
+                <div id="perplexity-result" class="mt-3 text-sm"></div>
+            </div>
+
+            <!-- Zillow API -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold mb-3">🏠 Zillow API</h3>
+                <button onclick="testZillow()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 w-full">
+                    Testar Zillow
+                </button>
+                <div id="zillow-result" class="mt-3 text-sm"></div>
+            </div>
+
+            <!-- Realtor.com API -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold mb-3">🏡 Realtor.com API</h3>
+                <button onclick="testRealtor()" class="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 w-full">
+                    Testar Realtor
+                </button>
+                <div id="realtor-result" class="mt-3 text-sm"></div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mt-6">
+            <h2 class="text-xl font-bold mb-4">📊 Resumo dos Testes</h2>
+            <div id="summary" class="text-gray-600">Clique nos botões acima para testar cada API</div>
+        </div>
+    </div>
+
+    <script>
+        const WORKER_URL = 'https://gt-lands-api.gustavo-146.workers.dev';
+        const results = {};
+
+        // Testar status do Worker
+        async function checkWorkerStatus() {
+            try {
+                const response = await fetch(`${WORKER_URL}/health`);
+                const data = await response.json();
+                
+                document.getElementById('worker-status').innerHTML = `
+                    <span class="text-green-600 font-bold">✅ Worker Online</span>
+                    <br>Versão: ${data.version}
+                `;
+            } catch (error) {
+                document.getElementById('worker-status').innerHTML = `
+                    <span class="text-red-600 font-bold">❌ Worker Offline</span>
+                    <br>Erro: ${error.message}
+                `;
+            }
+        }
+
+        // Testar Google Maps API
+        async function testGoogleMaps() {
+            const resultDiv = document.getElementById('google-maps-result');
+            resultDiv.innerHTML = '<span class="text-yellow-600">⏳ Testando...</span>';
+            
+            try {
+                const response = await fetch(`${WORKER_URL}/api/google-maps`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        endpoint: 'https://maps.googleapis.com/maps/api/geocode/json',
+                        params: { address: 'Tampa, FL' }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'OK') {
+                    results.googleMaps = true;
+                    resultDiv.innerHTML = `<span class="text-green-600">✅ Funcionando!</span><br>Localização: ${data.results[0].formatted_address}`;
+                } else {
+                    results.googleMaps = false;
+                    resultDiv.innerHTML = `<span class="text-red-600">❌ Erro: ${data.status}</span>`;
+                }
+            } catch (error) {
+                results.googleMaps = false;
+                resultDiv.innerHTML = `<span class="text-red-600">❌ Erro: ${error.message}</span>`;
+            }
+            updateSummary();
+        }
+
+        // Testar OpenAI API
+        async function testOpenAI() {
+            const resultDiv = document.getElementById('openai-result');
+            resultDiv.innerHTML = '<span class="text-yellow-600">⏳ Testando...</span>';
+            
+            try {
+                const response = await fetch(`${WORKER_URL}/api/openai`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages: [{ role: 'user', content: 'Say "API working!" in Portuguese' }],
+                        model: 'gpt-4',
+                        max_tokens: 50
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.choices && data.choices[0]) {
+                    results.openai = true;
+                    resultDiv.innerHTML = `<span class="text-green-600">✅ Funcionando!</span><br>Resposta: ${data.choices[0].message.content}`;
+                } else {
+                    results.openai = false;
+                    resultDiv.innerHTML = `<span class="text-red-600">❌ Erro: ${data.error?.message || 'Resposta inválida'}</span>`;
+                }
+            } catch (error) {
+                results.openai = false;
+                resultDiv.innerHTML = `<span class="text-red-600">❌ Erro: ${error.message}</span>`;
+            }
+            updateSummary();
+        }
+
+        // Testar Gemini API
+        async function testGemini() {
+            const resultDiv = document.getElementById('gemini-result');
+            resultDiv.innerHTML = '<span class="text-yellow-600">⏳ Testando...</span>';
+            
+            try {
+                const response = await fetch(`${WORKER_URL}/api/gemini`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: 'Say "API working!" in Portuguese',
+                        model: 'gemini-pro'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.candidates && data.candidates[0]) {
+                    results.gemini = true;
+                    const text = data.candidates[0].content.parts[0].text;
+                    resultDiv.innerHTML = `<span class="text-green-600">✅ Funcionando!</span><br>Resposta: ${text}`;
+                } else {
+                    results.gemini = false;
+                    resultDiv.innerHTML = `<span class="text-red-600">❌ Erro: ${data.error?.message || 'Resposta inválida'}</span>`;
+                }
+            } catch (error) {
+                results.gemini = false;
+                resultDiv.innerHTML = `<span class="text-red-600">❌ Erro: ${error.message}</span>`;
+            }
+            updateSummary();
+        }
+
+        // Testar Perplexity API
+        async function testPerplexity() {
+            const resultDiv = document.getElementById('perplexity-result');
+            resultDiv.innerHTML = '<span class="text-yellow-600">⏳ Testando...</span>';
+            
+            try {
+                const response = await fetch(`${WORKER_URL}/api/perplexity`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages: [{ role: 'user', content: 'Say "API working!" in Portuguese' }],
+                        model: 'llama-3.1-sonar-small-128k-online'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.choices && data.choices[0]) {
+                    results.perplexity = true;
+                    resultDiv.innerHTML = `<span class="text-green-600">✅ Funcionando!</span><br>Resposta: ${data.choices[0].message.content}`;
+                } else {
+                    results.perplexity = false;
+                    resultDiv.innerHTML = `<span class="text-red-600">❌ Erro: ${data.error?.message || 'Resposta inválida'}</span>`;
+                }
+            } catch (error) {
+                results.perplexity = false;
+                resultDiv.innerHTML = `<span class="text-red-600">❌ Erro: ${error.message}</span>`;
+            }
+            updateSummary();
+        }
+
+        // Testar Zillow API
+        async function testZillow() {
+            const resultDiv = document.getElementById('zillow-result');
+            resultDiv.innerHTML = '<span class="text-yellow-600">⏳ Testando...</span>';
+            
+            try {
+                const response = await fetch(`${WORKER_URL}/api/zillow`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        endpoint: '/search',
+                        params: { location: 'Tampa, FL', status: 'forSale' }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data && !data.error) {
+                    results.zillow = true;
+                    resultDiv.innerHTML = `<span class="text-green-600">✅ Funcionando!</span><br>Dados recebidos`;
+                } else {
+                    results.zillow = false;
+                    resultDiv.innerHTML = `<span class="text-red-600">❌ Erro: ${data.error || 'Resposta inválida'}</span>`;
+                }
+            } catch (error) {
+                results.zillow = false;
+                resultDiv.innerHTML = `<span class="text-red-600">❌ Erro: ${error.message}</span>`;
+            }
+            updateSummary();
+        }
+
+        // Testar Realtor.com API
+        async function testRealtor() {
+            const resultDiv = document.getElementById('realtor-result');
+            resultDiv.innerHTML = '<span class="text-yellow-600">⏳ Testando...</span>';
+            
+            try {
+                const response = await fetch(`${WORKER_URL}/api/realtor`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        endpoint: '/properties/list-for-sale',
+                        params: { city: 'Tampa', state_code: 'FL' }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data && !data.error) {
+                    results.realtor = true;
+                    resultDiv.innerHTML = `<span class="text-green-600">✅ Funcionando!</span><br>Dados recebidos`;
+                } else {
+                    results.realtor = false;
+                    resultDiv.innerHTML = `<span class="text-red-600">❌ Erro: ${data.error || 'Resposta inválida'}</span>`;
+                }
+            } catch (error) {
+                results.realtor = false;
+                resultDiv.innerHTML = `<span class="text-red-600">❌ Erro: ${error.message}</span>`;
+            }
+            updateSummary();
+        }
+
+        // Atualizar resumo
+        function updateSummary() {
+            const total = Object.keys(results).length;
+            const success = Object.values(results).filter(r => r).length;
+            const failed = total - success;
+            
+            document.getElementById('summary').innerHTML = `
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                        <div class="text-2xl font-bold text-blue-600">${total}</div>
+                        <div class="text-gray-600">Testadas</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-green-600">${success}</div>
+                        <div class="text-gray-600">Funcionando</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-red-600">${failed}</div>
+                        <div class="text-gray-600">Com Erro</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Inicializar
+        checkWorkerStatus();
+    </script>
+</body>
+</html>
+

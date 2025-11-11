@@ -934,3 +934,17 @@
 - [x] Adicionar função testRealtyMole()
 - [x] Testar funcionalidade de salvar e testar APIs
 
+
+
+
+## Dashboard v21.7 - Segurança e Melhorias de API
+
+- [x] Corrigir IPP (Interactive Property Preview) que não está aparecendo
+- [x] Implementar criptografia de API Keys no localStorage (Base64 + Salt)
+- [x] Atualizar funções de salvar para criptografar antes de armazenar
+- [x] Atualizar funções de carregar para descriptografar ao ler
+- [x] Melhorar testes de API com mais validações
+- [x] Adicionar feedback visual melhorado nos testes
+- [x] Adicionar tratamento de erros mais robusto
+- [ ] Testar todas as funcionalidades
+

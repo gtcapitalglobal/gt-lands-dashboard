@@ -546,6 +546,85 @@
 
     <script>
         // Toggle password visibility
+        // ========================================
+        // CRYPTO FUNCTIONS - API KEY ENCRYPTION
+        // ========================================
+
+        /**
+         * Encrypt API key using Base64 + simple XOR cipher
+         * @param {string} text - Plain text API key
+         * @returns {string} - Encrypted string
+         */
+        function encryptApiKey(text) {
+            if (!text) return '';
+            
+            // Salt for XOR cipher (change this to make it unique)
+            const salt = 'GT-LANDS-SECURE-2025';
+            
+            // XOR encryption
+            let encrypted = '';
+            for (let i = 0; i < text.length; i++) {
+                const charCode = text.charCodeAt(i) ^ salt.charCodeAt(i % salt.length);
+                encrypted += String.fromCharCode(charCode);
+            }
+            
+            // Encode to Base64 to make it URL-safe
+            return btoa(encrypted);
+        }
+
+        /**
+         * Decrypt API key
+         * @param {string} encrypted - Encrypted string
+         * @returns {string} - Decrypted plain text API key
+         */
+        function decryptApiKey(encrypted) {
+            if (!encrypted) return '';
+            
+            try {
+                // Decode from Base64
+                const decoded = atob(encrypted);
+                
+                // Salt for XOR cipher (must match encryption salt)
+                const salt = 'GT-LANDS-SECURE-2025';
+                
+                // XOR decryption
+                let decrypted = '';
+                for (let i = 0; i < decoded.length; i++) {
+                    const charCode = decoded.charCodeAt(i) ^ salt.charCodeAt(i % salt.length);
+                    decrypted += String.fromCharCode(charCode);
+                }
+                
+                return decrypted;
+            } catch (error) {
+                console.error('Erro ao descriptografar API key:', error);
+                return '';
+            }
+        }
+
+        /**
+         * Save encrypted API key to localStorage
+         * @param {string} key - localStorage key name
+         * @param {string} value - Plain text API key
+         */
+        function saveEncryptedKey(key, value) {
+            const encrypted = encryptApiKey(value);
+            localStorage.setItem(key, encrypted);
+        }
+
+        /**
+         * Load and decrypt API key from localStorage
+         * @param {string} key - localStorage key name
+         * @returns {string} - Decrypted plain text API key
+         */
+        function loadEncryptedKey(key) {
+            const encrypted = localStorage.getItem(key);
+            return decryptApiKey(encrypted);
+        }
+
+        // ========================================
+        // UI FUNCTIONS
+        // ========================================
+
         function togglePassword(inputId) {
             const input = document.getElementById(inputId);
             const button = input.nextElementSibling;
@@ -559,15 +638,15 @@
             }
         }
 
-        // Load saved API keys on page load
+        // Load saved API keys on page load (with decryption)
         window.addEventListener('DOMContentLoaded', () => {
-            const googleMapsKey = localStorage.getItem('googleMapsApiKey');
-            const openaiKey = localStorage.getItem('openaiApiKey');
-            const geminiKey = localStorage.getItem('geminiApiKey');
-            const perplexityKey = localStorage.getItem('perplexityApiKey');
-            const zillowKey = localStorage.getItem('zillowApiKey');
-            const realtorKey = localStorage.getItem('realtorApiKey');
-            const realtyMoleKey = localStorage.getItem('realtyMoleApiKey');
+            const googleMapsKey = loadEncryptedKey('googleMapsApiKey');
+            const openaiKey = loadEncryptedKey('openaiApiKey');
+            const geminiKey = loadEncryptedKey('geminiApiKey');
+            const perplexityKey = loadEncryptedKey('perplexityApiKey');
+            const zillowKey = loadEncryptedKey('zillowApiKey');
+            const realtorKey = loadEncryptedKey('realtorApiKey');
+            const realtyMoleKey = loadEncryptedKey('realtyMoleApiKey');
 
             if (googleMapsKey) document.getElementById('googleMapsApiKey').value = googleMapsKey;
             if (openaiKey) document.getElementById('openaiApiKey').value = openaiKey;
@@ -586,7 +665,7 @@
                 return;
             }
 
-            localStorage.setItem('googleMapsApiKey', apiKey);
+            saveEncryptedKey('googleMapsApiKey', apiKey);
             
             const indicator = document.getElementById('savedIndicator');
             indicator.classList.add('show');
@@ -600,9 +679,9 @@
             const geminiKey = document.getElementById('geminiApiKey').value.trim();
             const perplexityKey = document.getElementById('perplexityApiKey').value.trim();
 
-            if (openaiKey) localStorage.setItem('openaiApiKey', openaiKey);
-            if (geminiKey) localStorage.setItem('geminiApiKey', geminiKey);
-            if (perplexityKey) localStorage.setItem('perplexityApiKey', perplexityKey);
+            if (openaiKey) saveEncryptedKey('openaiApiKey', openaiKey);
+            if (geminiKey) saveEncryptedKey('geminiApiKey', geminiKey);
+            if (perplexityKey) saveEncryptedKey('perplexityApiKey', perplexityKey);
 
             const indicator = document.getElementById('savedIndicatorOther');
             indicator.classList.add('show');
@@ -811,7 +890,7 @@
                 alert('❌ Por favor, insira uma API Key!');
                 return;
             }
-            localStorage.setItem('openaiApiKey', apiKey);
+            saveEncryptedKey('openaiApiKey', apiKey);
             showSaveSuccess('openaiTestResult');
         }
 
@@ -821,7 +900,7 @@
                 alert('❌ Por favor, insira uma API Key!');
                 return;
             }
-            localStorage.setItem('geminiApiKey', apiKey);
+            saveEncryptedKey('geminiApiKey', apiKey);
             showSaveSuccess('geminiTestResult');
         }
 
@@ -831,7 +910,7 @@
                 alert('❌ Por favor, insira uma API Key!');
                 return;
             }
-            localStorage.setItem('perplexityApiKey', apiKey);
+            saveEncryptedKey('perplexityApiKey', apiKey);
             showSaveSuccess('perplexityTestResult');
         }
 
@@ -1017,7 +1096,7 @@
                 alert('❌ Por favor, insira uma API Key!');
                 return;
             }
-            localStorage.setItem('zillowApiKey', apiKey);
+            saveEncryptedKey('zillowApiKey', apiKey);
             showSaveSuccess('zillowTestResult');
         }
 
@@ -1027,7 +1106,7 @@
                 alert('❌ Por favor, insira uma API Key!');
                 return;
             }
-            localStorage.setItem('realtorApiKey', apiKey);
+            saveEncryptedKey('realtorApiKey', apiKey);
             showSaveSuccess('realtorTestResult');
         }
 
@@ -1037,7 +1116,7 @@
                 alert('❌ Por favor, insira uma API Key!');
                 return;
             }
-            localStorage.setItem('realtyMoleApiKey', apiKey);
+            saveEncryptedKey('realtyMoleApiKey', apiKey);
             showSaveSuccess('realtyMoleTestResult');
         }
 
@@ -1046,9 +1125,9 @@
             const realtorKey = document.getElementById('realtorApiKey').value.trim();
             const realtyMoleKey = document.getElementById('realtyMoleApiKey').value.trim();
 
-            if (zillowKey) localStorage.setItem('zillowApiKey', zillowKey);
-            if (realtorKey) localStorage.setItem('realtorApiKey', realtorKey);
-            if (realtyMoleKey) localStorage.setItem('realtyMoleApiKey', realtyMoleKey);
+            if (zillowKey) saveEncryptedKey('zillowApiKey', zillowKey);
+            if (realtorKey) saveEncryptedKey('realtorApiKey', realtorKey);
+            if (realtyMoleKey) saveEncryptedKey('realtyMoleApiKey', realtyMoleKey);
 
             const indicator = document.getElementById('savedIndicatorRealEstate');
             indicator.classList.add('show');
@@ -1261,45 +1340,45 @@
                 
                 if (apiKeys.googleMapsApiKey) {
                     document.getElementById('googleMapsApiKey').value = apiKeys.googleMapsApiKey;
-                    localStorage.setItem('googleMapsApiKey', apiKeys.googleMapsApiKey);
+                    saveEncryptedKey('googleMapsApiKey', apiKeys.googleMapsApiKey);
                     loadedCount++;
                 }
                 
                 if (apiKeys.openaiApiKey) {
                     document.getElementById('openaiApiKey').value = apiKeys.openaiApiKey;
-                    localStorage.setItem('openaiApiKey', apiKeys.openaiApiKey);
+                    saveEncryptedKey('openaiApiKey', apiKeys.openaiApiKey);
                     loadedCount++;
                 }
                 
                 if (apiKeys.geminiApiKey) {
                     document.getElementById('geminiApiKey').value = apiKeys.geminiApiKey;
-                    localStorage.setItem('geminiApiKey', apiKeys.geminiApiKey);
+                    saveEncryptedKey('geminiApiKey', apiKeys.geminiApiKey);
                     loadedCount++;
                 }
                 
                 if (apiKeys.perplexityApiKey) {
                     document.getElementById('perplexityApiKey').value = apiKeys.perplexityApiKey;
-                    localStorage.setItem('perplexityApiKey', apiKeys.perplexityApiKey);
+                    saveEncryptedKey('perplexityApiKey', apiKeys.perplexityApiKey);
                     loadedCount++;
                 }
                 
                 if (apiKeys.zillowApiKey || apiKeys.rapidApiKey) {
                     const key = apiKeys.zillowApiKey || apiKeys.rapidApiKey;
                     document.getElementById('zillowApiKey').value = key;
-                    localStorage.setItem('zillowApiKey', key);
+                    saveEncryptedKey('zillowApiKey', key);
                     loadedCount++;
                 }
                 
                 if (apiKeys.realtorApiKey || apiKeys.rapidApiKey) {
                     const key = apiKeys.realtorApiKey || apiKeys.rapidApiKey;
                     document.getElementById('realtorApiKey').value = key;
-                    localStorage.setItem('realtorApiKey', key);
+                    saveEncryptedKey('realtorApiKey', key);
                     loadedCount++;
                 }
                 
                 if (apiKeys.realtyMoleApiKey) {
                     document.getElementById('realtyMoleApiKey').value = apiKeys.realtyMoleApiKey;
-                    localStorage.setItem('realtyMoleApiKey', apiKeys.realtyMoleApiKey);
+                    saveEncryptedKey('realtyMoleApiKey', apiKeys.realtyMoleApiKey);
                     loadedCount++;
                 }
                 
